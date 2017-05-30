@@ -19,7 +19,7 @@ ALIAS:
 
 OPTIONS:
    --recent                   Dump recent logs instead of tailing
-   --skip-ssl-validation      Skip verification of the service broker endpoint. Not recommended!
+   --skip-ssl-validation      Skip verification of the logs endpoint. Not recommended!
 ```
 
 

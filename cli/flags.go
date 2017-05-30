@@ -20,13 +20,13 @@ import "fmt"
 import "code.cloudfoundry.org/cli/cf/flags"
 
 const (
-	RecentUsage = "Dump recent logs instead of tailing"
-	SkipSslValidationUsage = "Skip verification of the service broker endpoint. Not recommended!"
+	RecentUsage            = "Dump recent logs instead of tailing"
+	SkipSslValidationUsage = "Skip verification of the logs endpoint. Not recommended!"
 )
 
 func ParseFlags(args []string) (bool, bool, []string, error) {
 	const (
-		recentFlagName = "recent"
+		recentFlagName        = "recent"
 		sslValidationFlagName = "skip-ssl-validation"
 	)
 
