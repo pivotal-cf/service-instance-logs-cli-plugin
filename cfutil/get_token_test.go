@@ -22,7 +22,7 @@ import (
 	"code.cloudfoundry.org/cli/plugin/pluginfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf/spring-cloud-services-cli-plugin/cfutil"
+	"github.com/pivotal-cf/service-instance-logs-cli-plugin/cfutil"
 )
 
 var _ = Describe("GetToken", func() {

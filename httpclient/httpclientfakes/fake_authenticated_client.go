@@ -5,7 +5,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/pivotal-cf/spring-cloud-services-cli-plugin/httpclient"
+	"github.com/pivotal-cf/service-instance-logs-cli-plugin/httpclient"
 )
 
 type FakeAuthenticatedClient struct {

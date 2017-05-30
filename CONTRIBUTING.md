@@ -1,4 +1,4 @@
-# Contributing to the Spring Cloud Services CLI Plugin
+# Contributing to the Service Instance Logs CLI Plugin
 
 The Cloud Foundry team uses GitHub and accepts code contributions via
 [pull requests](https://help.github.com/articles/using-pull-requests).

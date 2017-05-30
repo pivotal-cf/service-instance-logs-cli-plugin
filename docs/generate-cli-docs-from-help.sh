@@ -4,14 +4,14 @@ if [ ! -z ${DEBUG} ]; then
     set -x
 fi
 
-declare -a SCS_COMMANDS=("config-server-encrypt-value" "service-registry-info" "service-registry-list" "service-registry-deregister")
+declare -a SCS_COMMANDS=("service-instance-logs")
 CMD_DOC_FILENAME=cli.md
 
-echo "# Spring Cloud Services CF CLI Plugin Docs
+echo "# Service Instance Logs CF CLI Plugin Docs
 
-The following commands can be executed using the Spring Cloud Services [Cloud Foundry CLI](https://github.com/cloudfoundry/cli) Plugin.
+The following commands can be executed using the Service Instance Logs [Cloud Foundry CLI](https://github.com/cloudfoundry/cli) Plugin.
 
-# Spring Cloud Services CLI Docs
+# Service Instance Logs CLI Docs
 
 " > $CMD_DOC_FILENAME
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
+ * Copyright (C) 2017-Present Pivotal Software, Inc. All rights reserved.
  *
  * This program and the accompanying materials are made available under
  * the terms of the under the Apache License, Version 2.0 (the "License”);
@@ -17,7 +17,7 @@
 package format_test
 
 import (
-	"github.com/pivotal-cf/spring-cloud-services-cli-plugin/format"
+	"github.com/pivotal-cf/service-instance-logs-cli-plugin/format"
 
 	"bytes"
 	"errors"

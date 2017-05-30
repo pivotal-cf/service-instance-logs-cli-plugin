@@ -6,7 +6,7 @@ import (
 	"code.cloudfoundry.org/cli/plugin"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf/spring-cloud-services-cli-plugin/pluginutil"
+	"github.com/pivotal-cf/service-instance-logs-cli-plugin/pluginutil"
 )
 
 var _ = Describe("ParsePluginVersion", func() {

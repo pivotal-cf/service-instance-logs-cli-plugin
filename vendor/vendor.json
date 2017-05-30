@@ -293,5 +293,5 @@
 			"revisionTime": "2016-09-28T15:37:09Z"
 		}
 	],
-	"rootPath": "github.com/pivotal-cf/spring-cloud-services-cli-plugin"
+	"rootPath": "github.com/pivotal-cf/service-instance-logs-cli-plugin"
 }

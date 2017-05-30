@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-Present the original author or authors.
+ * Copyright 2017-Present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,11 @@ import (
 	"os"
 
 	"code.cloudfoundry.org/cli/plugin"
-	"github.com/pivotal-cf/spring-cloud-services-cli-plugin/cli"
-	"github.com/pivotal-cf/spring-cloud-services-cli-plugin/config"
-	"github.com/pivotal-cf/spring-cloud-services-cli-plugin/eureka"
-	"github.com/pivotal-cf/spring-cloud-services-cli-plugin/format"
-	"github.com/pivotal-cf/spring-cloud-services-cli-plugin/httpclient"
-	"github.com/pivotal-cf/spring-cloud-services-cli-plugin/pluginutil"
+	"github.com/pivotal-cf/service-instance-logs-cli-plugin/cli"
+	"github.com/pivotal-cf/service-instance-logs-cli-plugin/format"
+	"github.com/pivotal-cf/service-instance-logs-cli-plugin/httpclient"
+	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logging"
+	"github.com/pivotal-cf/service-instance-logs-cli-plugin/pluginutil"
 )
 
 // Plugin version. Substitute "<major>.<minor>.<build>" at build time, e.g. using -ldflags='-X main.pluginVersion=1.2.3'
@@ -38,7 +37,7 @@ var pluginVersion = "invalid version - plugin was not built correctly"
 type Plugin struct{}
 
 func (c *Plugin) Run(cliConnection plugin.CliConnection, args []string) {
-	skipSslValidation, cfInstanceIndex, positionalArgs, err := cli.ParseFlags(args)
+	recent, skipSslValidation, positionalArgs, err := cli.ParseFlags(args)
 	if err != nil {
 		format.Diagnose(string(err.Error()), os.Stderr, func() {
 			os.Exit(1)
@@ -52,30 +51,16 @@ func (c *Plugin) Run(cliConnection plugin.CliConnection, args []string) {
 
 	switch args[0] {
 
-	case "config-server-encrypt-value":
-		configServerInstanceName := getConfigServerInstanceName(positionalArgs, args[0])
-		plainText := getPlainText(positionalArgs, args[0])
-		runActionQuietly(cliConnection, func() (string, error) {
-			return config.Encrypt(cliConnection, configServerInstanceName, plainText, authClient)
-		})
-
-	case "service-registry-deregister":
-		serviceRegistryInstanceName := getServiceRegistryInstanceName(positionalArgs, args[0])
-		cfApplicationName := getCfApplicationName(positionalArgs, args[0])
-		runAction(cliConnection, fmt.Sprintf("Deregistering application %s from service registry %s", format.Bold(format.Cyan(cfApplicationName)), format.Bold(format.Cyan(serviceRegistryInstanceName))), func() (string, error) {
-			return eureka.Deregister(cliConnection, serviceRegistryInstanceName, cfApplicationName, authClient, cfInstanceIndex)
-		})
-
-	case "service-registry-info":
-		serviceRegistryInstanceName := getServiceRegistryInstanceName(positionalArgs, args[0])
-		runAction(cliConnection, fmt.Sprintf("Getting information for service registry %s", format.Bold(format.Cyan(serviceRegistryInstanceName))), func() (string, error) {
-			return eureka.Info(cliConnection, client, serviceRegistryInstanceName, authClient)
-		})
-
-	case "service-registry-list":
-		serviceRegistryInstanceName := getServiceRegistryInstanceName(positionalArgs, args[0])
-		runAction(cliConnection, fmt.Sprintf("Listing service registry %s", format.Bold(format.Cyan(serviceRegistryInstanceName))), func() (string, error) {
-			return eureka.List(cliConnection, serviceRegistryInstanceName, authClient)
+	case "service-instance-logs":
+		serviceInstanceName := getServiceInstanceName(positionalArgs, args[0])
+		var behaviour string
+		if recent {
+			behaviour = "Dumping recent"
+		} else {
+			behaviour = "Tailing"
+		}
+		runAction(cliConnection, fmt.Sprintf("%s logs for service instance %s", behaviour, format.Bold(format.Cyan(serviceInstanceName))), func() (string, error) {
+			return logging.Logs(cliConnection, serviceInstanceName, recent, authClient)
 		})
 
 	default:
@@ -84,31 +69,9 @@ func (c *Plugin) Run(cliConnection plugin.CliConnection, args []string) {
 	}
 }
 
-func getCfApplicationName(args []string, operation string) string {
-	if len(args) < 3 || args[2] == "" {
-		diagnoseWithHelp("cf application name not specified.", operation)
-	}
-	return args[2]
-}
-
-func getConfigServerInstanceName(args []string, operation string) string {
+func getServiceInstanceName(args []string, operation string) string {
 	if len(args) < 2 || args[1] == "" {
-		diagnoseWithHelp("Configuration server instance name not specified.", operation)
-	}
-	return args[1]
-
-}
-
-func getPlainText(args []string, operation string) string {
-	if len(args) < 3 || args[2] == "" {
-		diagnoseWithHelp("string to encrypt not specified.", operation)
-	}
-	return args[2]
-}
-
-func getServiceRegistryInstanceName(args []string, operation string) string {
-	if len(args) < 2 || args[1] == "" {
-		diagnoseWithHelp("Service registry instance name not specified.", operation)
+		diagnoseWithHelp("Service instance name not specified.", operation)
 	}
 	return args[1]
 
@@ -142,48 +105,22 @@ func failInstallation(format string, inserts ...interface{}) {
 
 func (c *Plugin) GetMetadata() plugin.PluginMetadata {
 	return plugin.PluginMetadata{
-		Name:    "SCSPlugin",
+		Name:    "SILogs",
 		Version: pluginutil.ParsePluginVersion(pluginVersion, failInstallation),
 		MinCliVersion: plugin.VersionType{
 			Major: 6,
-			Minor: 7,
+			Minor: 25,
 			Build: 0,
 		},
 		Commands: []plugin.Command{
 			{
-				Name:     "config-server-encrypt-value",
-				HelpText: "Encrypt a string using a Spring Cloud Services configuration server",
-				Alias:    "csev",
+				Name:     "service-instance-logs",
+				HelpText: "Tail or show recent logs for a service instance",
+				Alias:    "sil",
 				UsageDetails: plugin.Usage{
-					Usage:   "   cf config-server-encrypt-value CONFIG_SERVER_INSTANCE_NAME VALUE_TO_ENCRYPT",
-					Options: map[string]string{"--skip-ssl-validation": cli.SkipSslValidationUsage},
-				},
-			},
-			{
-				Name:     "service-registry-deregister",
-				HelpText: "Deregister an application registered with a Spring Cloud Services service registry",
-				Alias:    "srd",
-				UsageDetails: plugin.Usage{
-					Usage:   "   cf service-registry-deregister SERVICE_REGISTRY_INSTANCE_NAME CF_APPLICATION_NAME",
-					Options: map[string]string{"--skip-ssl-validation": cli.SkipSslValidationUsage, "-i/--cf-instance-index": cli.CfInstanceIndexUsage},
-				},
-			},
-			{
-				Name:     "service-registry-info",
-				HelpText: "Display Spring Cloud Services service registry instance information",
-				Alias:    "sri",
-				UsageDetails: plugin.Usage{
-					Usage:   "   cf service-registry-info SERVICE_REGISTRY_INSTANCE_NAME",
-					Options: map[string]string{"--skip-ssl-validation": cli.SkipSslValidationUsage},
-				},
-			},
-			{
-				Name:     "service-registry-list",
-				HelpText: "Display all applications registered with a Spring Cloud Services service registry",
-				Alias:    "srl",
-				UsageDetails: plugin.Usage{
-					Usage:   "   cf service-registry-list SERVICE_REGISTRY_INSTANCE_NAME",
-					Options: map[string]string{"--skip-ssl-validation": cli.SkipSslValidationUsage},
+					Usage: "   cf service-instance-logs SERVICE_INSTANCE_NAME",
+					Options: map[string]string{"--skip-ssl-validation": cli.SkipSslValidationUsage,
+						"--recent": cli.RecentUsage},
 				},
 			},
 		},

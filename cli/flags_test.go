@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
+ * Copyright (C) 2017-Present Pivotal Software, Inc. All rights reserved.
  *
  * This program and the accompanying materials are made available under
  * the terms of the under the Apache License, Version 2.0 (the "License”);
@@ -19,35 +19,26 @@ package cli_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf/spring-cloud-services-cli-plugin/cli"
+	"github.com/pivotal-cf/service-instance-logs-cli-plugin/cli"
 )
 
 var _ = Describe("Flags", func() {
 
 	var (
-		args           = []string{"cf", "srd", "provision-service-registry", "provision-sr-1", "-i", "1", "-i", "2", "-i", "3"}
-		instanceIdx    *int
+		args           = []string{"cf", "sil", "my-service", "--recent"}
+		recent         bool
 		sslNoVerify    bool
 		positionalArgs []string
 		err            error
 	)
 
 	JustBeforeEach(func() {
-		sslNoVerify, instanceIdx, positionalArgs, err = cli.ParseFlags(args)
-	})
-
-	Context("when duplicate flags are passed on command line", func() {
-
-		It("the final of the duplicated flags will be chosen", func() {
-			Expect(err).ToNot(HaveOccurred())
-			Expect(*instanceIdx).To(Equal(3))
-		})
+		recent, sslNoVerify, positionalArgs, err = cli.ParseFlags(args)
 	})
 
 	Context("when an unexpected flag is received", func() {
-
 		BeforeEach(func() {
-			args = []string{"cf", "srd", "provision-service-registry", "provision-sr-1", "-i", "1", "-z"}
+			args = []string{"cf", "sil", "my-service", "-z"}
 		})
 
 		It("should raise a suitable error", func() {
@@ -56,47 +47,77 @@ var _ = Describe("Flags", func() {
 		})
 	})
 
-	Context("when the skip ssl validation flag is set", func() {
+	Describe("recent flag", func() {
+		Context("when the recent flag is set", func() {
+			BeforeEach(func() {
+				args = []string{"cf", "sil", "my-service", "--recent"}
+			})
 
-		BeforeEach(func() {
-			args = []string{"cf", "srd", "provision-service-registry", "provision-sr-1", "--skip-ssl-validation"}
-		})
-
-		It("should capture the flags value", func() {
-			Expect(err).ToNot(HaveOccurred())
-			Expect(sslNoVerify).To(BeTrue())
-		})
-
-		Context("when positional arguments are used by the command", func() {
-
-			It("should capture an array of positional arguments", func() {
+			It("should capture the flag's value", func() {
 				Expect(err).ToNot(HaveOccurred())
-				Expect(len(positionalArgs)).To(Equal(4))
+				Expect(recent).To(BeTrue())
+			})
+		})
+
+		Context("when the recent flag is not set", func() {
+			BeforeEach(func() {
+				args = []string{"cf", "sil", "my-service"}
+			})
+
+			It("should capture the flag's value", func() {
+				Expect(err).ToNot(HaveOccurred())
+				Expect(recent).To(BeFalse())
 			})
 		})
 
 	})
 
-	Context("when no flag is passed for instance index", func() {
+	Describe("skip ssl validation flag", func() {
+		Context("when the skip ssl validation flag is set", func() {
+			BeforeEach(func() {
+				args = []string{"cf", "sil", "my-service", "--skip-ssl-validation"}
+			})
 
-		BeforeEach(func() {
-			args = []string{"cf", "srd", "provision-service-registry", "provision-sr-1", "--skip-ssl-validation"}
+			It("should capture the flag's value", func() {
+				Expect(err).ToNot(HaveOccurred())
+				Expect(sslNoVerify).To(BeTrue())
+			})
 		})
+		
+		Context("when the skip ssl validation flag is not set", func() {
+			BeforeEach(func() {
+				args = []string{"cf", "sil", "my-service"}
+			})
 
-		It("should be parsed as nil", func() {
-			Expect(err).ToNot(HaveOccurred())
-			Expect(instanceIdx).To(BeNil())
+			It("should capture the flag's value", func() {
+				Expect(err).ToNot(HaveOccurred())
+				Expect(sslNoVerify).To(BeFalse())
+			})
 		})
 	})
 
-	Context("when a string value is passed for instance index", func() {
+	Describe("positional arguments", func() {
+		Context("when positional arguments are provided", func() {
+			BeforeEach(func() {
+				args = []string{"cf", "sil", "my-service"}
+			})
 
-		BeforeEach(func() {
-			args = []string{"cf", "srd", "provision-service-registry", "provision-sr-1", "--skip-ssl-validation", "-i", "one"}
+				It("should capture an array of positional arguments", func() {
+					Expect(err).ToNot(HaveOccurred())
+					Expect(len(positionalArgs)).To(Equal(3))
+					Expect(positionalArgs[2]).To(Equal("my-service"))
+				})
 		})
 
-		It("should raise a suitable error", func() {
-			Expect(err).To(MatchError("Error parsing arguments: Value for flag 'cf-instance-index' must be an integer"))
+		Context("when no positional arguments are provided", func() {
+			BeforeEach(func() {
+				args = []string{"cf", "sil"}
+			})
+
+			It("should capture an array of positional arguments", func() {
+				Expect(err).ToNot(HaveOccurred())
+				Expect(len(positionalArgs)).To(Equal(2))
+			})
 		})
 	})
 })

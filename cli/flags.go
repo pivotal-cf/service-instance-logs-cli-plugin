@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
+ * Copyright (C) 2017-Present Pivotal Software, Inc. All rights reserved.
  *
  * This program and the accompanying materials are made available under
  * the terms of the under the Apache License, Version 2.0 (the "License”);
@@ -20,31 +20,25 @@ import "fmt"
 import "code.cloudfoundry.org/cli/cf/flags"
 
 const (
-	SkipSslValidationUsage = "Skip verification of the service endpoint. Not recommended!"
-	CfInstanceIndexUsage   = "Deregister a specific instance in the Eureka registry. The instance index number can be found by using the service-registry-list command."
+	RecentUsage = "Dump recent logs instead of tailing"
+	SkipSslValidationUsage = "Skip verification of the service broker endpoint. Not recommended!"
 )
 
-func ParseFlags(args []string) (bool, *int, []string, error) {
+func ParseFlags(args []string) (bool, bool, []string, error) {
 	const (
+		recentFlagName = "recent"
 		sslValidationFlagName = "skip-ssl-validation"
-		instanceIndexFlagName = "cf-instance-index"
 	)
 
 	fc := flags.New()
 	//New flag methods take arguments: name, short_name and usage of the string flag
+	fc.NewBoolFlag(recentFlagName, recentFlagName, RecentUsage)
 	fc.NewBoolFlag(sslValidationFlagName, sslValidationFlagName, SkipSslValidationUsage)
-	fc.NewIntFlag(instanceIndexFlagName, "i", CfInstanceIndexUsage)
 	err := fc.Parse(args...)
 	if err != nil {
-		return false, nil, nil, fmt.Errorf("Error parsing arguments: %s", err)
+		return false, false, nil, fmt.Errorf("Error parsing arguments: %s", err)
 	}
 	skipSslValidation := fc.Bool(sslValidationFlagName)
-	//Use a pointer instead of value because 0 initialized int is a valid instance index
-	var cfInstanceIndex *int
-	if fc.IsSet(instanceIndexFlagName) {
-		var idx int
-		idx = fc.Int(instanceIndexFlagName)
-		cfInstanceIndex = &idx
-	}
-	return skipSslValidation, cfInstanceIndex, fc.Args(), nil
+	recent := fc.Bool(recentFlagName)
+	return recent, skipSslValidation, fc.Args(), nil
 }
