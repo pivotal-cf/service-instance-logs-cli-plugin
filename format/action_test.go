@@ -41,7 +41,7 @@ var _ = Describe("Actions", func() {
 		var (
 			ok                = format.Bold(format.Green("OK"))
 			fakeCliConnection *pluginfakes.FakeCliConnection
-			action            func() (string, error)
+			action            func() error
 			onFailure         func()
 			output            string
 		)
@@ -69,8 +69,8 @@ var _ = Describe("Actions", func() {
 				return "someUser", nil
 			}
 
-			action = func() (string, error) {
-				return "", nil
+			action = func() error {
+				return nil
 			}
 
 			onFailure = func() {}
@@ -83,20 +83,8 @@ var _ = Describe("Actions", func() {
 		})
 
 		It("should print a suitable progress message", func() {
-			Expect(output).To(Equal(testMessage + fmt.Sprintf(" in org %s / space %s as %s...\n%s\n\n",
+			Expect(output).To(Equal(testMessage + fmt.Sprintf(" in org %s / space %s as %s...\n%s\n",
 				format.Bold(format.Cyan("someOrg")), format.Bold(format.Cyan("someSpace")), format.Bold(format.Cyan("someUser")), ok)))
-		})
-
-		Context("when the action produces output", func() {
-			BeforeEach(func() {
-				action = func() (string, error) {
-					return "some output", nil
-				}
-			})
-
-			It("should print the output", func() {
-				Expect(output).To(ContainSubstring("some output"))
-			})
 		})
 
 		Context("when no org is targetted", func() {
@@ -107,7 +95,7 @@ var _ = Describe("Actions", func() {
 			})
 
 			It("should print output with no progress message", func() {
-				Expect(output).To(Equal(fmt.Sprintf("%s\n\n", ok)))
+				Expect(output).To(Equal(fmt.Sprintf("%s\n", ok)))
 			})
 		})
 
@@ -119,7 +107,7 @@ var _ = Describe("Actions", func() {
 			})
 
 			It("should print output with no progress message", func() {
-				Expect(output).To(Equal(fmt.Sprintf("%s\n\n", ok)))
+				Expect(output).To(Equal(fmt.Sprintf("%s\n", ok)))
 			})
 		})
 
@@ -132,7 +120,7 @@ var _ = Describe("Actions", func() {
 				})
 
 				It("should print output with no progress message", func() {
-					Expect(output).To(Equal(fmt.Sprintf("%s\n\n", ok)))
+					Expect(output).To(Equal(fmt.Sprintf("%s\n", ok)))
 				})
 			})
 
@@ -144,15 +132,15 @@ var _ = Describe("Actions", func() {
 				})
 
 				It("should print output with no progress message", func() {
-					Expect(output).To(Equal(fmt.Sprintf("%s\n\n", ok)))
+					Expect(output).To(Equal(fmt.Sprintf("%s\n", ok)))
 				})
 			})
 		})
 
 		Context("when the action fails", func() {
 			BeforeEach(func() {
-				action = func() (string, error) {
-					return "", errors.New("Fake Error")
+				action = func() error {
+					return errors.New("Fake Error")
 				}
 			})
 
@@ -163,8 +151,8 @@ var _ = Describe("Actions", func() {
 
 		Context("when the action fails with a certificate error", func() {
 			BeforeEach(func() {
-				action = func() (string, error) {
-					return "", errors.New("Error: unknown authority")
+				action = func() error {
+					return errors.New("Error: unknown authority")
 				}
 			})
 
@@ -183,7 +171,7 @@ var _ = Describe("Actions", func() {
 
 		var (
 			fakeCliConnection *pluginfakes.FakeCliConnection
-			action            func() (string, error)
+			action            func() error
 			onFailure         func()
 			output            string
 		)
@@ -211,8 +199,8 @@ var _ = Describe("Actions", func() {
 				return "someUser", nil
 			}
 
-			action = func() (string, error) {
-				return "", nil
+			action = func() error {
+				return nil
 			}
 
 			onFailure = func() {}
@@ -224,22 +212,10 @@ var _ = Describe("Actions", func() {
 			output = writer.String()
 		})
 
-		Context("when the action produces output", func() {
-			BeforeEach(func() {
-				action = func() (string, error) {
-					return "some output", nil
-				}
-			})
-
-			It("should print the output", func() {
-				Expect(output).To(ContainSubstring("some output"))
-			})
-		})
-
 		Context("when the action fails", func() {
 			BeforeEach(func() {
-				action = func() (string, error) {
-					return "", errors.New("Fake Error")
+				action = func() error {
+					return errors.New("Fake Error")
 				}
 			})
 
@@ -250,8 +226,8 @@ var _ = Describe("Actions", func() {
 
 		Context("when the action fails with a certificate error", func() {
 			BeforeEach(func() {
-				action = func() (string, error) {
-					return "", errors.New("Error: unknown authority")
+				action = func() error {
+					return errors.New("Error: unknown authority")
 				}
 			})
 
