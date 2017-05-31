@@ -33,24 +33,22 @@ var (
 )
 
 // Run a given action with a given progress message, writing the output to the given writer and invoking a failure closure if an error occurs.
-func RunAction(cliConnection plugin.CliConnection, message string, action func() (string, error), writer io.Writer, onFailure func()) {
+func RunAction(cliConnection plugin.CliConnection, message string, action func() error, writer io.Writer, onFailure func()) {
 	printStartAction(cliConnection, message, writer)
-	output, err := action()
+	err := action()
 	if err != nil {
 		Diagnose(err.Error(), writer, onFailure)
 		return
 	}
-	fmt.Fprintf(writer, "%s\n\n%s", Bold(Green("OK")), output)
 }
 
 // Run a given action writing the output to the given writer and invoking a failure closure if an error occurs.
-func RunActionQuietly(cliConnection plugin.CliConnection, action func() (string, error), writer io.Writer, onFailure func()) {
-	output, err := action()
+func RunActionQuietly(cliConnection plugin.CliConnection, action func() error, writer io.Writer, onFailure func()) {
+	err := action()
 	if err != nil {
 		Diagnose(err.Error(), writer, onFailure)
 		return
 	}
-	fmt.Fprintln(writer, output)
 }
 
 func printStartAction(cliConnection plugin.CliConnection, message string, writer io.Writer) {

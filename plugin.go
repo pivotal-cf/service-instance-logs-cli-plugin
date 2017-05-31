@@ -16,17 +16,15 @@
 package main
 
 import (
-	"crypto/tls"
 	"fmt"
-	"net/http"
 	"os"
 
 	"code.cloudfoundry.org/cli/plugin"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/cli"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/format"
-	"github.com/pivotal-cf/service-instance-logs-cli-plugin/httpclient"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logging"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/pluginutil"
+	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient"
 )
 
 // Plugin version. Substitute "<major>.<minor>.<build>" at build time, e.g. using -ldflags='-X main.pluginVersion=1.2.3'
@@ -43,11 +41,6 @@ func (c *Plugin) Run(cliConnection plugin.CliConnection, args []string) {
 			os.Exit(1)
 		})
 	}
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: skipSslValidation},
-	}
-	client := &http.Client{Transport: tr}
-	authClient := httpclient.NewAuthenticatedClient(client)
 
 	switch args[0] {
 
@@ -55,12 +48,13 @@ func (c *Plugin) Run(cliConnection plugin.CliConnection, args []string) {
 		serviceInstanceName := getServiceInstanceName(positionalArgs, args[0])
 		var behaviour string
 		if recent {
-			behaviour = "Dumping recent"
+			behaviour = "Retrieving"
 		} else {
-			behaviour = "Tailing"
+			behaviour = "Connected, tailing"
 		}
-		runAction(cliConnection, fmt.Sprintf("%s logs for service instance %s", behaviour, format.Bold(format.Cyan(serviceInstanceName))), func() (string, error) {
-			return logging.Logs(cliConnection, serviceInstanceName, recent, authClient)
+		runAction(cliConnection, fmt.Sprintf("%s logs for service instance %s", behaviour, format.Bold(format.Cyan(serviceInstanceName))), func() error {
+			logClientBuilder := logclient.NewLogClientBuilder().InsecureSkipVerify(skipSslValidation)
+			return logging.Logs(cliConnection, os.Stdout, serviceInstanceName, recent, *logClientBuilder)
 		})
 
 	default:
@@ -77,13 +71,13 @@ func getServiceInstanceName(args []string, operation string) string {
 
 }
 
-func runAction(cliConnection plugin.CliConnection, message string, action func() (string, error)) {
+func runAction(cliConnection plugin.CliConnection, message string, action func() error) {
 	format.RunAction(cliConnection, message, action, os.Stdout, func() {
 		os.Exit(1)
 	})
 }
 
-func runActionQuietly(cliConnection plugin.CliConnection, action func() (string, error)) {
+func runActionQuietly(cliConnection plugin.CliConnection, action func() error) {
 	format.RunActionQuietly(cliConnection, action, os.Stdout, func() {
 		os.Exit(1)
 	})
