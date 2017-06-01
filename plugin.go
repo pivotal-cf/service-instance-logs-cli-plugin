@@ -54,7 +54,7 @@ func (c *Plugin) Run(cliConnection plugin.CliConnection, args []string) {
 		}
 		runAction(cliConnection, fmt.Sprintf("%s logs for service instance %s", behaviour, format.Bold(format.Cyan(serviceInstanceName))), func() error {
 			logClientBuilder := logclient.NewLogClientBuilder().InsecureSkipVerify(skipSslValidation)
-			return logging.Logs(cliConnection, os.Stdout, serviceInstanceName, recent, *logClientBuilder)
+			return logging.Logs(cliConnection, os.Stdout, serviceInstanceName, recent, logClientBuilder)
 		})
 
 	default:
