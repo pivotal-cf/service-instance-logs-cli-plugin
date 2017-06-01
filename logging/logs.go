@@ -28,7 +28,6 @@ func tailLogs(logClient logclient.LogClient, serviceGUID string, accessToken str
 	msgChan, errorChan := logClient.TailingLogs(serviceGUID, accessToken)
 
 	var wg sync.WaitGroup
-
 	wg.Add(2)
 
 	go func() {
@@ -56,11 +55,12 @@ func tailLogs(logClient logclient.LogClient, serviceGUID string, accessToken str
 	}()
 
 	outcomeErr := <-outcome
-
 	if outcomeErr != nil {
 		return outcomeErr
 	}
+
 	wg.Wait()
+
 	return nil
 
 }
