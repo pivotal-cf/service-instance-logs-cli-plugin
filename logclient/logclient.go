@@ -39,12 +39,14 @@ func (builder *logClientBuilder) Build() LogClient {
 	}
 }
 
+//go:generate counterfeiter -o logclientfakes/fake_log_client_builder.go . LogClientBuilder
 type LogClientBuilder interface {
 	Endpoint(url string) LogClientBuilder
 	InsecureSkipVerify(skipVerify bool) LogClientBuilder
 	Build() LogClient
 }
 
+//go:generate counterfeiter -o logclientfakes/fake_log_client.go . LogClient
 type LogClient interface {
 	// TODO: do we need to sort the recent logs? Compare the cf CLI
 	RecentLogs(serviceGUID string, authToken string) ([]string, error)
