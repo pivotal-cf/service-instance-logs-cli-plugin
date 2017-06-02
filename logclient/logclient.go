@@ -13,44 +13,52 @@ const LogTimestampFormat = "2006-01-02T15:04:05.00-0700"
 
 var CurrentTimezoneLocation = time.Now().Location()
 
-type LogClientBuilder struct {
-	LogClientImpl
+type logClientBuilder struct {
+	endpoint           string
+	insecureSkipVerify bool
 }
 
-func NewLogClientBuilder() *LogClientBuilder {
-	return &LogClientBuilder{}
+func NewLogClientBuilder() *logClientBuilder {
+	return &logClientBuilder{}
 }
 
-func (builder *LogClientBuilder) Endpoint(url string) *LogClientBuilder {
+func (builder *logClientBuilder) Endpoint(url string) LogClientBuilder {
 	builder.endpoint = url
 	return builder
 }
 
-func (builder *LogClientBuilder) InsecureSkipVerify(skipVerify bool) *LogClientBuilder {
+func (builder *logClientBuilder) InsecureSkipVerify(skipVerify bool) LogClientBuilder {
 	builder.insecureSkipVerify = skipVerify
 	return builder
 }
 
-func (builder *LogClientBuilder) Build() *LogClientImpl {
-	client := &LogClientImpl{}
-	client.endpoint = builder.endpoint
-	client.consumer = consumer.New(client.endpoint, &tls.Config{InsecureSkipVerify: builder.insecureSkipVerify}, nil)
-	return client
+func (builder *logClientBuilder) Build() LogClient {
+	return &logClient{
+		endpoint: builder.endpoint,
+		consumer: consumer.New(builder.endpoint, &tls.Config{InsecureSkipVerify: builder.insecureSkipVerify}, nil),
+	}
 }
 
+//go:generate counterfeiter -o logclientfakes/fake_log_client_builder.go . LogClientBuilder
+type LogClientBuilder interface {
+	Endpoint(url string) LogClientBuilder
+	InsecureSkipVerify(skipVerify bool) LogClientBuilder
+	Build() LogClient
+}
+
+//go:generate counterfeiter -o logclientfakes/fake_log_client.go . LogClient
 type LogClient interface {
 	// TODO: do we need to sort the recent logs? Compare the cf CLI
 	RecentLogs(serviceGUID string, authToken string) ([]string, error)
 	TailingLogs(serviceGUID string, authToken string) (<-chan string, <-chan error)
 }
 
-type LogClientImpl struct {
+type logClient struct {
 	endpoint           string
-	insecureSkipVerify bool
 	consumer           *consumer.Consumer
 }
 
-func (lc *LogClientImpl) RecentLogs(serviceGUID string, authToken string) ([]string, error) {
+func (lc *logClient) RecentLogs(serviceGUID string, authToken string) ([]string, error) {
 	messages, err := lc.consumer.RecentLogs(serviceGUID, "bearer "+authToken)
 	if err != nil {
 		return nil, err
@@ -64,7 +72,7 @@ func (lc *LogClientImpl) RecentLogs(serviceGUID string, authToken string) ([]str
 	return result, nil
 }
 
-func (lc *LogClientImpl) TailingLogs(serviceGUID string, authToken string) (<-chan string, <-chan error) {
+func (lc *logClient) TailingLogs(serviceGUID string, authToken string) (<-chan string, <-chan error) {
 	msgChan, errorChan := lc.consumer.TailingLogs(serviceGUID, "bearer "+authToken)
 	strMsgChan := make(chan string)
 
