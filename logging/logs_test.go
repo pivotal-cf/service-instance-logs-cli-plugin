@@ -14,8 +14,6 @@ import (
 )
 
 var _ = Describe("Logs", func() {
-
-	//func Logs(cliConnection plugin.CliConnection, w io.Writer, serviceInstanceName string, recent bool, logClientBuilder logclient.LogClientBuilder) error {
 	const (
 		errMessage          = "no dice"
 		serviceInstanceName = "siname"
