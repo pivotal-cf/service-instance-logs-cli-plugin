@@ -11,6 +11,7 @@ import (
 	"github.com/onsi/gomega/gbytes"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient/logclientfakes"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logging"
+	"code.cloudfoundry.org/cli/plugin/models"
 )
 
 var _ = Describe("Logs", func() {
@@ -18,6 +19,7 @@ var _ = Describe("Logs", func() {
 		errMessage          = "no dice"
 		serviceInstanceName = "siname"
 		testToken           = "some-token"
+		serviceGUID = "870cdf18-7e15-435a-8459-6c38a8452d79"
 	)
 
 	var (
@@ -32,6 +34,7 @@ var _ = Describe("Logs", func() {
 
 	BeforeEach(func() {
 		fakeCliConnection = &pluginfakes.FakeCliConnection{}
+		fakeCliConnection.GetServiceReturns(plugin_models.GetService_Model{Guid:serviceGUID}, nil)
 		fakeCliConnection.AccessTokenReturns("bearer "+testToken, nil)
 		fakeLogClientBuilder = &logclientfakes.FakeLogClientBuilder{}
 		fakeLogClient = &logclientfakes.FakeLogClient{}
@@ -45,6 +48,16 @@ var _ = Describe("Logs", func() {
 	JustBeforeEach(func() {
 		err = logging.Logs(fakeCliConnection, output, serviceInstanceName, recent, fakeLogClientBuilder)
 	})
+	
+	Context("when obtaining the service instance GUID returns an error", func() {
+		BeforeEach(func() {
+			fakeCliConnection.GetServiceReturns(plugin_models.GetService_Model{}, testError)
+		})
+
+		It("should propagate the error", func() {
+			Expect(err).To(Equal(testError))
+		})
+	})
 
 	Context("when obtaining an access token returns an error", func() {
 		BeforeEach(func() {
@@ -57,6 +70,12 @@ var _ = Describe("Logs", func() {
 	})
 
 	Context("when dumping recent logs", func() {
+		It("should call log client recent logs with the correct parameters", func() {
+			Expect(fakeLogClient.RecentLogsCallCount()).To(Equal(1))
+		    guid, tok := fakeLogClient.RecentLogsArgsForCall(0)
+			Expect(guid).To(Equal(serviceGUID))
+			Expect(tok).To(Equal(testToken))
+		})
 		Context("when log client recent logs return an error", func() {
 			BeforeEach(func() {
 				fakeLogClient.RecentLogsReturns([]string{}, testError)

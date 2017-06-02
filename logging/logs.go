@@ -53,6 +53,19 @@ func tailLogs(logClient logclient.LogClient, serviceGUID string, accessToken str
 }
 
 func Logs(cliConnection plugin.CliConnection, w io.Writer, serviceInstanceName string, recent bool, logClientBuilder logclient.LogClientBuilder) error {
+	// get service GUID from service instance name
+	model, err := cliConnection.GetService(serviceInstanceName)
+	if err != nil {
+		return err
+	}
+	serviceInstanceGUID := model.Guid
+
+	// get auth token
+	accessToken, err := cfutil.GetToken(cliConnection)
+	if err != nil {
+		return err
+	}
+
 	// get metadata from cf curl /v2/services // is there a way to get just the service we need?
 	// deserialise metadata
 	// pluck out the logs endpoint URL
@@ -64,22 +77,12 @@ func Logs(cliConnection plugin.CliConnection, w io.Writer, serviceInstanceName s
 
 	logClient := logClientBuilder.Endpoint(url).Build()
 
-	// get service GUID from service instance name
-	// FIXME: temporary hack - pass an app GUID as the SI name
-	guid := serviceInstanceName
-
-	// get auth token
-	accessToken, err := cfutil.GetToken(cliConnection)
-	if err != nil {
-		return err
-	}
-
 	// Print a blank line.
 	fmt.Fprintln(w)
 
 	if recent {
-		return dumpRecentLogs(logClient, guid, accessToken, w)
+		return dumpRecentLogs(logClient, serviceInstanceGUID, accessToken, w)
 	}
 
-	return tailLogs(logClient, guid, accessToken, w)
+	return tailLogs(logClient, serviceInstanceGUID, accessToken, w)
 }
