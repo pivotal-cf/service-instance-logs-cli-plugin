@@ -1,9 +1,10 @@
 package logging
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
-
+	"strings"
 	"sync"
 
 	"code.cloudfoundry.org/cli/plugin"
@@ -59,6 +60,7 @@ func Logs(cliConnection plugin.CliConnection, w io.Writer, serviceInstanceName s
 		return err
 	}
 	serviceInstanceGUID := model.Guid
+	serviceName := model.ServiceOffering.Name
 
 	// get auth token
 	accessToken, err := cfutil.GetToken(cliConnection)
@@ -66,16 +68,12 @@ func Logs(cliConnection plugin.CliConnection, w io.Writer, serviceInstanceName s
 		return err
 	}
 
-	// get metadata from cf curl /v2/services // is there a way to get just the service we need?
-	// deserialise metadata
-	// pluck out the logs endpoint URL
-	// FIXME: temporary code to use doppler endpoint rather than that provided for the service
-	url, err := cliConnection.DopplerEndpoint()
+	serviceInstanceLogsEndpoint, err := obtainServiceInstanceLogsEndpoint(cliConnection, serviceName)
 	if err != nil {
 		return err
 	}
 
-	logClient := logClientBuilder.Endpoint(url).Build()
+	logClient := logClientBuilder.Endpoint(serviceInstanceLogsEndpoint).Build()
 
 	// Print a blank line.
 	fmt.Fprintln(w)
@@ -85,4 +83,50 @@ func Logs(cliConnection plugin.CliConnection, w io.Writer, serviceInstanceName s
 	}
 
 	return tailLogs(logClient, serviceInstanceGUID, accessToken, w)
+}
+
+type ServicesStructure struct {
+	TotalResults int `json:"total_results"`
+	Resources    []ResourceStructure
+}
+
+type ResourceStructure struct {
+	Entity EntityStructure
+}
+
+type EntityStructure struct {
+	Extra string
+}
+
+type ExtraStructure struct {
+	ServiceInstanceLogsEndpoint string
+}
+
+func obtainServiceInstanceLogsEndpoint(cliConnection plugin.CliConnection, serviceName string) (string, error) {
+	output, err := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v2/services?q=label:%s", serviceName))
+	if err != nil {
+		return "", fmt.Errorf("/v2/services failed: %s", err)
+	}
+
+	var services ServicesStructure
+	err = json.Unmarshal([]byte(strings.Join(output, "\n")), &services)
+	if err != nil {
+		return "", fmt.Errorf("/v2/services returned invalid JSON: %s", err)
+	}
+
+	if services.TotalResults == 0 {
+		return "", fmt.Errorf("/v2/services did not return the service instance")
+	}
+
+	var extra ExtraStructure
+	err = json.Unmarshal([]byte(services.Resources[0].Entity.Extra), &extra)
+	if err != nil {
+		return "", fmt.Errorf("/v2/services 'extra' field contained invalid JSON: %s", err)
+	}
+
+	if extra.ServiceInstanceLogsEndpoint == "" {
+		return "", fmt.Errorf("/v2/services did not contain a service instance logs endpoint: maybe the broker version is too old")
+	}
+
+	return extra.ServiceInstanceLogsEndpoint, nil
 }

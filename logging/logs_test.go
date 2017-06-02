@@ -5,13 +5,13 @@ import (
 	"sync"
 	"time"
 
+	"code.cloudfoundry.org/cli/plugin/models"
 	"code.cloudfoundry.org/cli/plugin/pluginfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient/logclientfakes"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logging"
-	"code.cloudfoundry.org/cli/plugin/models"
 )
 
 var _ = Describe("Logs", func() {
@@ -19,7 +19,7 @@ var _ = Describe("Logs", func() {
 		errMessage          = "no dice"
 		serviceInstanceName = "siname"
 		testToken           = "some-token"
-		serviceGUID = "870cdf18-7e15-435a-8459-6c38a8452d79"
+		serviceGUID         = "870cdf18-7e15-435a-8459-6c38a8452d79"
 	)
 
 	var (
@@ -34,7 +34,7 @@ var _ = Describe("Logs", func() {
 
 	BeforeEach(func() {
 		fakeCliConnection = &pluginfakes.FakeCliConnection{}
-		fakeCliConnection.GetServiceReturns(plugin_models.GetService_Model{Guid:serviceGUID}, nil)
+		fakeCliConnection.GetServiceReturns(plugin_models.GetService_Model{Guid: serviceGUID}, nil)
 		fakeCliConnection.AccessTokenReturns("bearer "+testToken, nil)
 		fakeLogClientBuilder = &logclientfakes.FakeLogClientBuilder{}
 		fakeLogClient = &logclientfakes.FakeLogClient{}
@@ -43,12 +43,25 @@ var _ = Describe("Logs", func() {
 		recent = true
 		testError = errors.New(errMessage)
 		output = gbytes.NewBuffer()
+
+		servicesOutput := []string{
+			`{`,
+			`"total_results": 1,`,
+			`"resources": [`,
+			`{`,
+			`"entity": {`,
+			`"extra": "{\"documentationUrl\":\"http://docs.pivotal.io/spring-cloud-services/\",\"serviceInstanceLogsEndpoint\":\"wss://service-instance-logs/\"}"`,
+			`}`,
+			`}`,
+			`]`,
+			`}`}
+		fakeCliConnection.CliCommandWithoutTerminalOutputReturns(servicesOutput, nil)
 	})
 
 	JustBeforeEach(func() {
 		err = logging.Logs(fakeCliConnection, output, serviceInstanceName, recent, fakeLogClientBuilder)
 	})
-	
+
 	Context("when obtaining the service instance GUID returns an error", func() {
 		BeforeEach(func() {
 			fakeCliConnection.GetServiceReturns(plugin_models.GetService_Model{}, testError)
@@ -69,13 +82,94 @@ var _ = Describe("Logs", func() {
 		})
 	})
 
+	Context("when obtaining logs endpoint returns an error", func() {
+		BeforeEach(func() {
+			fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{}, testError)
+		})
+
+		It("should propagate the error", func() {
+			Expect(err).To(MatchError("/v2/services failed: " + errMessage))
+		})
+	})
+
+	Context("when logs endpoint is not found", func() {
+		BeforeEach(func() {
+			output := []string{`{`, `"total_results": 0,`, `"resources": []`, `}`}
+			fakeCliConnection.CliCommandWithoutTerminalOutputReturns(output, nil)
+		})
+
+		It("should return a suitable error", func() {
+			Expect(err).To(MatchError("/v2/services did not return the service instance"))
+		})
+	})
+
+	Context("when services output is malformed JSON", func() {
+		BeforeEach(func() {
+			output := []string{`{`}
+			fakeCliConnection.CliCommandWithoutTerminalOutputReturns(output, nil)
+		})
+
+		It("should return a suitable error", func() {
+			Expect(err).To(MatchError("/v2/services returned invalid JSON: unexpected end of JSON input"))
+		})
+	})
+
+	Context("when the extras field contains malformed JSON", func() {
+		BeforeEach(func() {
+			servicesOutput := []string{
+				`{`,
+				`"total_results": 1,`,
+				`"resources": [`,
+				`{`,
+				`"entity": {`,
+				`"extra": "{"`,
+				`}`,
+				`}`,
+				`]`,
+				`}`}
+			fakeCliConnection.CliCommandWithoutTerminalOutputReturns(servicesOutput, nil)
+		})
+
+		It("should return a suitable error", func() {
+			Expect(err).To(MatchError("/v2/services 'extra' field contained invalid JSON: unexpected end of JSON input"))
+		})
+	})
+
+	Context("when the extras field does not contain the logs endpoint", func() {
+		BeforeEach(func() {
+			servicesOutput := []string{
+				`{`,
+				`"total_results": 1,`,
+				`"resources": [`,
+				`{`,
+				`"entity": {`,
+				`"extra": "{\"documentationUrl\":\"http://docs.pivotal.io/spring-cloud-services/\"}"`,
+				`}`,
+				`}`,
+				`]`,
+				`}`}
+			fakeCliConnection.CliCommandWithoutTerminalOutputReturns(servicesOutput, nil)
+		})
+
+		It("should return a suitable error", func() {
+			Expect(err).To(MatchError("/v2/services did not contain a service instance logs endpoint: maybe the broker version is too old"))
+		})
+	})
+
+	Context("when logs endpoint is found", func() {
+		It("should pass the endpoint to the log client builder", func() {
+			Expect(fakeLogClientBuilder.EndpointArgsForCall(0)).To(Equal("wss://service-instance-logs/"))
+		})
+	})
+
 	Context("when dumping recent logs", func() {
 		It("should call log client recent logs with the correct parameters", func() {
 			Expect(fakeLogClient.RecentLogsCallCount()).To(Equal(1))
-		    guid, tok := fakeLogClient.RecentLogsArgsForCall(0)
+			guid, tok := fakeLogClient.RecentLogsArgsForCall(0)
 			Expect(guid).To(Equal(serviceGUID))
 			Expect(tok).To(Equal(testToken))
 		})
+
 		Context("when log client recent logs return an error", func() {
 			BeforeEach(func() {
 				fakeLogClient.RecentLogsReturns([]string{}, testError)
