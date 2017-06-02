@@ -39,7 +39,6 @@ var _ = Describe("Actions", func() {
 		)
 
 		var (
-			ok                = format.Bold(format.Green("OK"))
 			fakeCliConnection *pluginfakes.FakeCliConnection
 			action            func() error
 			onFailure         func()
@@ -83,8 +82,8 @@ var _ = Describe("Actions", func() {
 		})
 
 		It("should print a suitable progress message", func() {
-			Expect(output).To(Equal(testMessage + fmt.Sprintf(" in org %s / space %s as %s...\n%s\n",
-				format.Bold(format.Cyan("someOrg")), format.Bold(format.Cyan("someSpace")), format.Bold(format.Cyan("someUser")), ok)))
+			Expect(output).To(Equal(testMessage + fmt.Sprintf(" in org %s / space %s as %s...\n",
+				format.Bold(format.Cyan("someOrg")), format.Bold(format.Cyan("someSpace")), format.Bold(format.Cyan("someUser")))))
 		})
 
 		Context("when no org is targetted", func() {
@@ -94,8 +93,8 @@ var _ = Describe("Actions", func() {
 				}
 			})
 
-			It("should print output with no progress message", func() {
-				Expect(output).To(Equal(fmt.Sprintf("%s\n", ok)))
+			It("should not print any output", func() {
+				Expect(output).To(Equal(""))
 			})
 		})
 
@@ -106,8 +105,8 @@ var _ = Describe("Actions", func() {
 				}
 			})
 
-			It("should print output with no progress message", func() {
-				Expect(output).To(Equal(fmt.Sprintf("%s\n", ok)))
+			It("should not print any output", func() {
+				Expect(output).To(Equal(""))
 			})
 		})
 
@@ -119,8 +118,8 @@ var _ = Describe("Actions", func() {
 					}
 				})
 
-				It("should print output with no progress message", func() {
-					Expect(output).To(Equal(fmt.Sprintf("%s\n", ok)))
+				It("should not print any output", func() {
+					Expect(output).To(Equal(""))
 				})
 			})
 
@@ -131,8 +130,8 @@ var _ = Describe("Actions", func() {
 					}
 				})
 
-				It("should print output with no progress message", func() {
-					Expect(output).To(Equal(fmt.Sprintf("%s\n", ok)))
+				It("should not print any output", func() {
+					Expect(output).To(Equal(""))
 				})
 			})
 		})
