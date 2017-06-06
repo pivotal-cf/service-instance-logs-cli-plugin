@@ -35,7 +35,7 @@ func (builder *logClientBuilder) InsecureSkipVerify(skipVerify bool) LogClientBu
 func (builder *logClientBuilder) Build() LogClient {
 	return &logClient{
 		endpoint: builder.endpoint,
-		Consumer: consumer.New(builder.endpoint, &tls.Config{InsecureSkipVerify: builder.insecureSkipVerify}, nil),
+		consumer: consumer.New(builder.endpoint, &tls.Config{InsecureSkipVerify: builder.insecureSkipVerify}, nil),
 	}
 }
 
@@ -53,8 +53,8 @@ type LogClient interface {
 	TailingLogs(serviceGUID string, authToken string) (<-chan string, <-chan error)
 }
 
-// Wrap interactions with NOAA consumer.Consumer inside an interface whose behaviour can be faked in tests
-//go:generate counterfeiter -o logclientfakes/fake_consumer.go . Consumer
+// Wrap interactions with NOAA consumer.consumer inside an interface whose behaviour can be faked in tests
+//go:generate counterfeiter -o logclientfakes/fake_consumer.go . consumer
 type Consumer interface {
 	RecentLogs(appGuid string, authToken string) ([]*events.LogMessage, error)
 	TailingLogs(appGuid, authToken string) (<-chan *events.LogMessage, <-chan error)
@@ -62,11 +62,11 @@ type Consumer interface {
 
 type logClient struct {
 	endpoint string
-	Consumer Consumer
+	consumer Consumer
 }
 
 func (lc *logClient) RecentLogs(serviceGUID string, authToken string) ([]string, error) {
-	messages, err := lc.Consumer.RecentLogs(serviceGUID, "bearer "+authToken)
+	messages, err := lc.consumer.RecentLogs(serviceGUID, "bearer "+authToken)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (lc *logClient) RecentLogs(serviceGUID string, authToken string) ([]string,
 }
 
 func (lc *logClient) TailingLogs(serviceGUID string, authToken string) (<-chan string, <-chan error) {
-	msgChan, errorChan := lc.Consumer.TailingLogs(serviceGUID, "bearer "+authToken)
+	msgChan, errorChan := lc.consumer.TailingLogs(serviceGUID, "bearer "+authToken)
 	strMsgChan := make(chan string)
 
 	go func() {

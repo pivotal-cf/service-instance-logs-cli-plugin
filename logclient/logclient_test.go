@@ -3,14 +3,13 @@ package logclient_test
 import (
 	"errors"
 	"fmt"
-	"reflect"
 
 	"time"
 
 	"github.com/cloudfoundry/sonde-go/events"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient"
+	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient/logclientfakes"
 )
 
@@ -23,7 +22,7 @@ var _ = Describe("Logclient", func() {
 	)
 
 	var (
-		logClient        LogClient
+		logClient        logclient.LogClient
 		fakeConsumer     *logclientfakes.FakeConsumer
 		testError        error
 		currentTimestamp int64
@@ -33,14 +32,14 @@ var _ = Describe("Logclient", func() {
 		testError = errors.New(errMessage)
 		fakeConsumer = &logclientfakes.FakeConsumer{}
 
-		builder := NewLogClientBuilder()
+		builder := logclient.NewLogClientBuilder()
 		logClient = builder.InsecureSkipVerify(true).Endpoint(endpointUrl).Build()
 
-		// Replace the logClient's consumer with the fakeConsumer using reflection.
-		// TODO Investigate if it is possible to set the fake consumer without exporting the field?
-		v := reflect.ValueOf(logClient).Elem().FieldByName("Consumer")
-		ptr := v.Addr().Interface().(*Consumer)
-		*ptr = fakeConsumer
+		if logClient, ok := logClient.(logclient.ConsumerSetter); ok {
+			logClient.SetConsumer(fakeConsumer)
+		} else {
+			Fail("logClient did not implement ConsumerSetter")
+		}
 	})
 
 	Describe("RecentLogs", func() {
@@ -81,11 +80,7 @@ var _ = Describe("Logclient", func() {
 				lm2 := createLogMessage(2, events.LogMessage_OUT, currentTimestamp)
 				lm3 := createLogMessage(3, events.LogMessage_ERR, currentTimestamp)
 
-				resultArray := make([]*events.LogMessage, 0, 3)
-				resultArray = append(resultArray, &lm1)
-				resultArray = append(resultArray, &lm2)
-				resultArray = append(resultArray, &lm3)
-				fakeConsumer.RecentLogsReturns(resultArray, nil)
+				fakeConsumer.RecentLogsReturns([]*events.LogMessage{&lm1, &lm2, &lm3}, nil)
 			})
 
 			It("should call the consumer RecentLogs function", func() {
