@@ -24,6 +24,7 @@ var _ = Describe("Logclient", func() {
 	var (
 		logClient        logclient.LogClient
 		fakeConsumer     *logclientfakes.FakeConsumer
+		fakeSorter       *logclientfakes.FakeSorter
 		testError        error
 		currentTimestamp int64
 	)
@@ -31,21 +32,25 @@ var _ = Describe("Logclient", func() {
 	BeforeEach(func() {
 		testError = errors.New(errMessage)
 		fakeConsumer = &logclientfakes.FakeConsumer{}
+		fakeSorter = &logclientfakes.FakeSorter{}
 
 		builder := logclient.NewLogClientBuilder()
 		logClient = builder.InsecureSkipVerify(true).Endpoint(endpointUrl).Build()
 
-		if logClient, ok := logClient.(logclient.ConsumerSetter); ok {
+		if logClient, ok := logClient.(logclient.FieldSetter); ok {
 			logClient.SetConsumer(fakeConsumer)
 		} else {
-			Fail("logClient did not implement ConsumerSetter")
+			Fail("logClient did not implement FieldSetter")
 		}
 	})
 
 	Describe("RecentLogs", func() {
 		var (
-			result []string
-			err    error
+			result              []string
+			err                 error
+			mostRecentTimestamp int64
+			olderTimestamp      int64
+			oldestTimestamp     int64
 		)
 
 		JustBeforeEach(func() {
@@ -73,12 +78,55 @@ var _ = Describe("Logclient", func() {
 		})
 
 		Context("when request for recent logs from consumer returns normally", func() {
+			var (
+				consumerRecentLogsResponse []*events.LogMessage
+			)
+
+			BeforeEach(func() {
+				if logClient, ok := logClient.(logclient.FieldSetter); ok {
+					logClient.SetSorter(fakeSorter)
+				} else {
+					Fail("logClient did not implement FieldSetter")
+				}
+
+				consumerRecentLogsResponse = []*events.LogMessage{}
+				fakeConsumer.RecentLogsReturns(consumerRecentLogsResponse, nil)
+			})
+
+			It("should call the consumer RecentLogs function", func() {
+				Expect(fakeConsumer.RecentLogsCallCount()).To(Equal(1))
+			})
+
+			It("should use the supplied serviceGUID and authToken for the consumer call", func() {
+				svcGuid, token := fakeConsumer.RecentLogsArgsForCall(0)
+				Expect(svcGuid).To(Equal(serviceGuid))
+				Expect(token).To(Equal("bearer " + authToken))
+			})
+
+			It("should call the sorter", func() {
+				Expect(fakeSorter.SortRecentCallCount()).To(Equal(1))
+			})
+
+			It("should pass the log messages received from the consumer to the sorter", func() {
+				messages := fakeSorter.SortRecentArgsForCall(0)
+				Expect(messages).To(Equal(consumerRecentLogsResponse))
+			})
+
+			It("should return normally", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+
+		Context("when request for recent logs from consumer returns normally and received log messages are out of time sequence", func() {
 			BeforeEach(func() {
 				currentTimestamp = time.Now().UnixNano()
+				mostRecentTimestamp = currentTimestamp
+				olderTimestamp = currentTimestamp - 1e9  // 1 second ago
+				oldestTimestamp = currentTimestamp - 2e9 // 2 seconds ago
 
-				lm1 := createLogMessage(1, events.LogMessage_OUT, currentTimestamp)
-				lm2 := createLogMessage(2, events.LogMessage_OUT, currentTimestamp)
-				lm3 := createLogMessage(3, events.LogMessage_ERR, currentTimestamp)
+				lm1 := createLogMessage("RECENT", events.LogMessage_OUT, mostRecentTimestamp)
+				lm2 := createLogMessage("OLDER", events.LogMessage_OUT, olderTimestamp)
+				lm3 := createLogMessage("OLDEST", events.LogMessage_ERR, oldestTimestamp)
 
 				fakeConsumer.RecentLogsReturns([]*events.LogMessage{&lm1, &lm2, &lm3}, nil)
 			})
@@ -97,14 +145,51 @@ var _ = Describe("Logclient", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			It("should return correctly formatted messages based on response from consumer", func() {
+			It("should return correctly formatted messages sorted by timestamp with oldest first", func() {
 				Expect(len(result)).To(Equal(3))
 
-				Expect(result[0]).Should(Equal(fmt.Sprintf("%s [ST1/SI1] OUT MESSAGE1",
+				Expect(result[0]).Should(Equal(fmt.Sprintf("%s [ST-OLDEST/SI-OLDEST] ERR MESSAGE-OLDEST",
+					formatUnixTimestamp(oldestTimestamp))))
+				Expect(result[1]).Should(Equal(fmt.Sprintf("%s [ST-OLDER/SI-OLDER] OUT MESSAGE-OLDER",
+					formatUnixTimestamp(olderTimestamp))))
+				Expect(result[2]).Should(Equal(fmt.Sprintf("%s [ST-RECENT/SI-RECENT] OUT MESSAGE-RECENT",
+					formatUnixTimestamp(mostRecentTimestamp))))
+			})
+		})
+
+		Context("when request for recent logs returns normally and received log messages all have same timestamp", func() {
+			BeforeEach(func() {
+				currentTimestamp = time.Now().UnixNano()
+
+				lm1 := createLogMessage("RECEIVED-FIRST", events.LogMessage_OUT, currentTimestamp)
+				lm2 := createLogMessage("RECEIVED-SECOND", events.LogMessage_OUT, currentTimestamp)
+				lm3 := createLogMessage("RECEIVED-THIRD", events.LogMessage_ERR, currentTimestamp)
+
+				fakeConsumer.RecentLogsReturns([]*events.LogMessage{&lm1, &lm2, &lm3}, nil)
+			})
+
+			It("should call the consumer RecentLogs function", func() {
+				Expect(fakeConsumer.RecentLogsCallCount()).To(Equal(1))
+			})
+
+			It("should use the supplied serviceGUID and authToken for the consumer call", func() {
+				svcGuid, token := fakeConsumer.RecentLogsArgsForCall(0)
+				Expect(svcGuid).To(Equal(serviceGuid))
+				Expect(token).To(Equal("bearer " + authToken))
+			})
+
+			It("should return normally", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("should return correctly formatted messages sorted by order received", func() {
+				Expect(len(result)).To(Equal(3))
+
+				Expect(result[0]).Should(Equal(fmt.Sprintf("%s [ST-RECEIVED-FIRST/SI-RECEIVED-FIRST] OUT MESSAGE-RECEIVED-FIRST",
 					formatUnixTimestamp(currentTimestamp))))
-				Expect(result[1]).Should(Equal(fmt.Sprintf("%s [ST2/SI2] OUT MESSAGE2",
+				Expect(result[1]).Should(Equal(fmt.Sprintf("%s [ST-RECEIVED-SECOND/SI-RECEIVED-SECOND] OUT MESSAGE-RECEIVED-SECOND",
 					formatUnixTimestamp(currentTimestamp))))
-				Expect(result[2]).Should(Equal(fmt.Sprintf("%s [ST3/SI3] ERR MESSAGE3",
+				Expect(result[2]).Should(Equal(fmt.Sprintf("%s [ST-RECEIVED-THIRD/SI-RECEIVED-THIRD] ERR MESSAGE-RECEIVED-THIRD",
 					formatUnixTimestamp(currentTimestamp))))
 			})
 		})
@@ -136,13 +221,13 @@ var _ = Describe("Logclient", func() {
 		Context("in the normal case", func() {
 			BeforeEach(func() {
 				currentTimestamp = time.Now().UnixNano()
-				lm1 := createLogMessage(1, events.LogMessage_OUT, currentTimestamp)
+				lm1 := createLogMessage("1", events.LogMessage_OUT, currentTimestamp)
 				logMsgsChan <- &lm1
 
-				lm2 := createLogMessage(2, events.LogMessage_ERR, currentTimestamp)
+				lm2 := createLogMessage("2", events.LogMessage_ERR, currentTimestamp)
 				logMsgsChan <- &lm2
 
-				lm3 := createLogMessage(3, events.LogMessage_OUT, currentTimestamp)
+				lm3 := createLogMessage("3", events.LogMessage_OUT, currentTimestamp)
 				logMsgsChan <- &lm3
 			})
 
@@ -159,15 +244,15 @@ var _ = Describe("Logclient", func() {
 			It("should send expected string messages in correct sequence to returned message channel", func() {
 				var receivedMsg string
 				Eventually(logStringsChan).Should(Receive(&receivedMsg))
-				Expect(receivedMsg).Should(Equal(fmt.Sprintf("%s [ST1/SI1] OUT MESSAGE1",
+				Expect(receivedMsg).Should(Equal(fmt.Sprintf("%s [ST-1/SI-1] OUT MESSAGE-1",
 					formatUnixTimestamp(currentTimestamp))))
 
 				Eventually(logStringsChan).Should(Receive(&receivedMsg))
-				Expect(receivedMsg).Should(Equal(fmt.Sprintf("%s [ST2/SI2] ERR MESSAGE2",
+				Expect(receivedMsg).Should(Equal(fmt.Sprintf("%s [ST-2/SI-2] ERR MESSAGE-2",
 					formatUnixTimestamp(currentTimestamp))))
 
 				Eventually(logStringsChan).Should(Receive(&receivedMsg))
-				Expect(receivedMsg).Should(Equal(fmt.Sprintf("%s [ST3/SI3] OUT MESSAGE3",
+				Expect(receivedMsg).Should(Equal(fmt.Sprintf("%s [ST-3/SI-3] OUT MESSAGE-3",
 					formatUnixTimestamp(currentTimestamp))))
 			})
 
@@ -215,14 +300,14 @@ var _ = Describe("Logclient", func() {
 	})
 })
 
-func createLogMessage(fieldSuffix int, messageType events.LogMessage_MessageType, unixTimestamp int64) events.LogMessage {
+func createLogMessage(fieldSuffix string, messageType events.LogMessage_MessageType, unixTimestamp int64) events.LogMessage {
 	sourceTypeValue := new(string)
-	*sourceTypeValue = fmt.Sprintf("ST%d", fieldSuffix)
+	*sourceTypeValue = fmt.Sprintf("ST-%s", fieldSuffix)
 	sourceInstanceValue := new(string)
-	*sourceInstanceValue = fmt.Sprintf("SI%d", fieldSuffix)
+	*sourceInstanceValue = fmt.Sprintf("SI-%s", fieldSuffix)
 	messageTypeValue := new(events.LogMessage_MessageType)
 	*messageTypeValue = messageType
-	return events.LogMessage{Message: []byte(fmt.Sprintf("MESSAGE%d", fieldSuffix)),
+	return events.LogMessage{Message: []byte(fmt.Sprintf("MESSAGE-%s", fieldSuffix)),
 		SourceType:     sourceTypeValue,
 		SourceInstance: sourceInstanceValue,
 		MessageType:    messageTypeValue,
