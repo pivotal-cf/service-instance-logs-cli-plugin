@@ -2,7 +2,7 @@ package logclient
 
 import (
 	"crypto/tls"
-
+	"fmt"
 	"time"
 
 	"github.com/cloudfoundry/noaa/consumer"
@@ -35,7 +35,7 @@ func (builder *logClientBuilder) InsecureSkipVerify(skipVerify bool) LogClientBu
 func (builder *logClientBuilder) Build() LogClient {
 	return &logClient{
 		endpoint: builder.endpoint,
-		consumer: consumer.New(builder.endpoint, &tls.Config{InsecureSkipVerify: builder.insecureSkipVerify}, nil),
+		Consumer: consumer.New(builder.endpoint, &tls.Config{InsecureSkipVerify: builder.insecureSkipVerify}, nil),
 	}
 }
 
@@ -53,13 +53,20 @@ type LogClient interface {
 	TailingLogs(serviceGUID string, authToken string) (<-chan string, <-chan error)
 }
 
+// Wrap interactions with NOAA consumer.Consumer inside an interface whose behaviour can be faked in tests
+//go:generate counterfeiter -o logclientfakes/fake_consumer.go . Consumer
+type Consumer interface {
+	RecentLogs(appGuid string, authToken string) ([]*events.LogMessage, error)
+	TailingLogs(appGuid, authToken string) (<-chan *events.LogMessage, <-chan error)
+}
+
 type logClient struct {
-	endpoint           string
-	consumer           *consumer.Consumer
+	endpoint string
+	Consumer Consumer
 }
 
 func (lc *logClient) RecentLogs(serviceGUID string, authToken string) ([]string, error) {
-	messages, err := lc.consumer.RecentLogs(serviceGUID, "bearer "+authToken)
+	messages, err := lc.Consumer.RecentLogs(serviceGUID, "bearer "+authToken)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +80,7 @@ func (lc *logClient) RecentLogs(serviceGUID string, authToken string) ([]string,
 }
 
 func (lc *logClient) TailingLogs(serviceGUID string, authToken string) (<-chan string, <-chan error) {
-	msgChan, errorChan := lc.consumer.TailingLogs(serviceGUID, "bearer "+authToken)
+	msgChan, errorChan := lc.Consumer.TailingLogs(serviceGUID, "bearer "+authToken)
 	strMsgChan := make(chan string)
 
 	go func() {
@@ -86,12 +93,12 @@ func (lc *logClient) TailingLogs(serviceGUID string, authToken string) (<-chan s
 }
 
 func convertLogMessageToString(msg *events.LogMessage) string {
-	formattedMsg := convertTimestampEpochNanosToString(msg) +
-		" [" + msg.GetSourceType() + "/" +
-		msg.GetSourceInstance() + "] " +
-		msg.GetMessageType().String() + " " +
-		string(msg.GetMessage())
-	return formattedMsg
+	return fmt.Sprintf("%s [%s/%s] %s %s",
+		convertTimestampEpochNanosToString(msg),
+		msg.GetSourceType(),
+		msg.GetSourceInstance(),
+		msg.GetMessageType().String(),
+		string(msg.GetMessage()))
 }
 
 func convertTimestampEpochNanosToString(message *events.LogMessage) string {
