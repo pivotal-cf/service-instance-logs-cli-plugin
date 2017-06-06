@@ -155,14 +155,14 @@
 		{
 			"checksumSHA1": "GaNNhXPl7kzmp5prr3JaFvGvpQ4=",
 			"path": "github.com/cloudfoundry/noaa",
-			"revision": "ea8759ba3628ce69b0c332ccea75ac6e373a938b",
-			"revisionTime": "2017-05-26T20:39:36Z"
+			"revision": "07aabc4509d8ea37a81f596d5918dc5094e5b90f",
+			"revisionTime": "2017-06-02T10:16:56Z"
 		},
 		{
-			"checksumSHA1": "GF0waB+pe/5ugAZGL2cNEvjV6q4=",
+			"checksumSHA1": "qe7M/Kk4ptyQpuB5p+UEtBSHFsA=",
 			"path": "github.com/cloudfoundry/noaa/consumer",
-			"revision": "ea8759ba3628ce69b0c332ccea75ac6e373a938b",
-			"revisionTime": "2017-05-26T20:39:36Z"
+			"revision": "07aabc4509d8ea37a81f596d5918dc5094e5b90f",
+			"revisionTime": "2017-06-02T10:16:56Z"
 		},
 		{
 			"checksumSHA1": "h1rUpiRmfBEPHwIeFM1+aVP7ln4=",
