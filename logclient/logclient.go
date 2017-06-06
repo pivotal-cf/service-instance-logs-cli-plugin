@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cloudfoundry/noaa"
 	"github.com/cloudfoundry/noaa/consumer"
 	"github.com/cloudfoundry/sonde-go/events"
 )
@@ -36,6 +37,7 @@ func (builder *logClientBuilder) Build() LogClient {
 	return &logClient{
 		endpoint: builder.endpoint,
 		consumer: consumer.New(builder.endpoint, &tls.Config{InsecureSkipVerify: builder.insecureSkipVerify}, nil),
+		sorter:   &sorter{},
 	}
 }
 
@@ -54,15 +56,29 @@ type LogClient interface {
 }
 
 // Wrap interactions with NOAA consumer.consumer inside an interface whose behaviour can be faked in tests
-//go:generate counterfeiter -o logclientfakes/fake_consumer.go . consumer
+//go:generate counterfeiter -o logclientfakes/fake_consumer.go . Consumer
 type Consumer interface {
 	RecentLogs(appGuid string, authToken string) ([]*events.LogMessage, error)
 	TailingLogs(appGuid, authToken string) (<-chan *events.LogMessage, <-chan error)
 }
 
+// Wrap interactions with noaa.SortRecent inside an interface whose behaviour can be faked in tests
+//go:generate counterfeiter -o logclientfakes/fake_sorter.go . Sorter
+type Sorter interface {
+	SortRecent(messages []*events.LogMessage) []*events.LogMessage
+}
+
+type sorter struct {
+}
+
+func (s *sorter) SortRecent(messages []*events.LogMessage) []*events.LogMessage {
+	return noaa.SortRecent(messages)
+}
+
 type logClient struct {
 	endpoint string
 	consumer Consumer
+	sorter   Sorter
 }
 
 func (lc *logClient) RecentLogs(serviceGUID string, authToken string) ([]string, error) {
@@ -70,6 +86,8 @@ func (lc *logClient) RecentLogs(serviceGUID string, authToken string) ([]string,
 	if err != nil {
 		return nil, err
 	}
+
+	messages = lc.sorter.SortRecent(messages)
 
 	result := []string{}
 	for _, msg := range messages {
