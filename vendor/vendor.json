@@ -57,6 +57,102 @@
 			"revisionTime": "2017-01-07T01:22:35Z"
 		},
 		{
+			"checksumSHA1": "TPCuvUFOk350RknDOt99TKPjYLw=",
+			"path": "github.com/cloudfoundry/dropsonde",
+			"revision": "566965a4f337c6c72c0bc7f0854c564001bab69e",
+			"revisionTime": "2017-05-26T03:32:52Z"
+		},
+		{
+			"checksumSHA1": "ySe4yoUBaTntRr4sj+zTyDa4RIo=",
+			"path": "github.com/cloudfoundry/dropsonde/emitter",
+			"revision": "566965a4f337c6c72c0bc7f0854c564001bab69e",
+			"revisionTime": "2017-05-26T03:32:52Z"
+		},
+		{
+			"checksumSHA1": "idinAiWaSJlP1Z3Jft+NskKvzkM=",
+			"path": "github.com/cloudfoundry/dropsonde/emitter/fake",
+			"revision": "566965a4f337c6c72c0bc7f0854c564001bab69e",
+			"revisionTime": "2017-05-26T03:32:52Z"
+		},
+		{
+			"checksumSHA1": "g4mOwJMUdcqMh+ODZD5xihS5hME=",
+			"path": "github.com/cloudfoundry/dropsonde/envelope_sender",
+			"revision": "566965a4f337c6c72c0bc7f0854c564001bab69e",
+			"revisionTime": "2017-05-26T03:32:52Z"
+		},
+		{
+			"checksumSHA1": "e13O2gSC9dj3Yr2BN5HD6rHHRgc=",
+			"path": "github.com/cloudfoundry/dropsonde/envelope_sender/fake",
+			"revision": "566965a4f337c6c72c0bc7f0854c564001bab69e",
+			"revisionTime": "2017-05-26T03:32:52Z"
+		},
+		{
+			"checksumSHA1": "/409WI3PMJpMOfI4UWeEVWCSzis=",
+			"path": "github.com/cloudfoundry/dropsonde/envelopes",
+			"revision": "566965a4f337c6c72c0bc7f0854c564001bab69e",
+			"revisionTime": "2017-05-26T03:32:52Z"
+		},
+		{
+			"checksumSHA1": "bcoL8VRY92lTuwJtf1KTAbEmRRA=",
+			"path": "github.com/cloudfoundry/dropsonde/factories",
+			"revision": "566965a4f337c6c72c0bc7f0854c564001bab69e",
+			"revisionTime": "2017-05-26T03:32:52Z"
+		},
+		{
+			"checksumSHA1": "URofKJybDwp4s5MCUiFKQE0CuoQ=",
+			"path": "github.com/cloudfoundry/dropsonde/instrumented_handler",
+			"revision": "566965a4f337c6c72c0bc7f0854c564001bab69e",
+			"revisionTime": "2017-05-26T03:32:52Z"
+		},
+		{
+			"checksumSHA1": "2wZqQXQheXJjozmUJdaqMoSzNPw=",
+			"path": "github.com/cloudfoundry/dropsonde/instrumented_round_tripper",
+			"revision": "566965a4f337c6c72c0bc7f0854c564001bab69e",
+			"revisionTime": "2017-05-26T03:32:52Z"
+		},
+		{
+			"checksumSHA1": "8N9eBqBHT/KAfLajJsqYamFnj0o=",
+			"path": "github.com/cloudfoundry/dropsonde/log_sender",
+			"revision": "566965a4f337c6c72c0bc7f0854c564001bab69e",
+			"revisionTime": "2017-05-26T03:32:52Z"
+		},
+		{
+			"checksumSHA1": "Z7vAsXuQsE4zdp6nKzvyYNAwUvg=",
+			"path": "github.com/cloudfoundry/dropsonde/log_sender/fake",
+			"revision": "566965a4f337c6c72c0bc7f0854c564001bab69e",
+			"revisionTime": "2017-05-26T03:32:52Z"
+		},
+		{
+			"checksumSHA1": "78G2HbaYyAFGy78p4rfMtDXQjUY=",
+			"path": "github.com/cloudfoundry/dropsonde/logs",
+			"revision": "566965a4f337c6c72c0bc7f0854c564001bab69e",
+			"revisionTime": "2017-05-26T03:32:52Z"
+		},
+		{
+			"checksumSHA1": "TGIiBaoQkGGrIKRL69Ecs9mq1EM=",
+			"path": "github.com/cloudfoundry/dropsonde/metric_sender",
+			"revision": "566965a4f337c6c72c0bc7f0854c564001bab69e",
+			"revisionTime": "2017-05-26T03:32:52Z"
+		},
+		{
+			"checksumSHA1": "SBxRbyfH1YWd+wTOQxitsxO1L5Q=",
+			"path": "github.com/cloudfoundry/dropsonde/metricbatcher",
+			"revision": "566965a4f337c6c72c0bc7f0854c564001bab69e",
+			"revisionTime": "2017-05-26T03:32:52Z"
+		},
+		{
+			"checksumSHA1": "1sHfhMWZjE/L33P1kTJBUAQtV+o=",
+			"path": "github.com/cloudfoundry/dropsonde/metrics",
+			"revision": "566965a4f337c6c72c0bc7f0854c564001bab69e",
+			"revisionTime": "2017-05-26T03:32:52Z"
+		},
+		{
+			"checksumSHA1": "wiyc4UY2eeMrx4GBySG00g10dCk=",
+			"path": "github.com/cloudfoundry/dropsonde/runtime_stats",
+			"revision": "566965a4f337c6c72c0bc7f0854c564001bab69e",
+			"revisionTime": "2017-05-26T03:32:52Z"
+		},
+		{
 			"checksumSHA1": "GaNNhXPl7kzmp5prr3JaFvGvpQ4=",
 			"path": "github.com/cloudfoundry/noaa",
 			"revision": "ea8759ba3628ce69b0c332ccea75ac6e373a938b",
@@ -199,6 +295,12 @@
 			"path": "github.com/mattn/go-isatty",
 			"revision": "30a891c33c7cde7b02a981314b4228ec99380cca",
 			"revisionTime": "2016-11-23T14:36:37Z"
+		},
+		{
+			"checksumSHA1": "XC6s8JOUHX9AIr23WWeuu9VoH+8=",
+			"path": "github.com/nu7hatch/gouuid",
+			"revision": "179d4d0c4d8d407a32af483c2354df1d2c91e6c3",
+			"revisionTime": "2013-12-21T20:05:32Z"
 		},
 		{
 			"checksumSHA1": "5CYrIFTTUD3pONFo8uEO21Ajz68=",
