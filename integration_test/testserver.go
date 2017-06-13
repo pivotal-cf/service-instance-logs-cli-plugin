@@ -44,13 +44,21 @@ func (e *HTTPEventEmitter) Emit(event events.Event) error {
 
 func (e *HTTPEventEmitter) EmitEnvelope(envelope *events.Envelope) error {
 	partWriter, err := e.mpw.CreatePart(nil)
-	binaryData, _ := envelope.Marshal()
+	if err != nil {
+		return err
+	}
+
+	binaryData, err := envelope.Marshal()
+	if err != nil {
+		return err
+	}
+
 	_, err = partWriter.Write(binaryData)
 	return err
 }
 
-func (e *HTTPEventEmitter) Close() {
-	e.mpw.Close()
+func (e *HTTPEventEmitter) Close() error {
+	return e.mpw.Close()
 }
 
 //noinspection GoUnusedParameter
@@ -79,7 +87,10 @@ func dumpServiceLogs(rw http.ResponseWriter, r *http.Request) {
 		}
 		sender.SendEnvelope(env)
 	}
-	emitter.Close()
+	err := emitter.Close()
+	if err != nil {
+		panic(fmt.Sprintf("Error closing response writer: %s", err.Error()))
+	}
 }
 
 func makeAscendingGenerator() func() int64 {
