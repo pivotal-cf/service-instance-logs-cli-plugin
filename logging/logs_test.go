@@ -253,7 +253,7 @@ var _ = Describe("Logs", func() {
 
 				go func() {
 					defer wg.Done()
-					time.Sleep(time.Second)
+					time.Sleep(50 * time.Millisecond)
 					close(messageChan)
 					close(errChan)
 				}()
@@ -281,7 +281,7 @@ var _ = Describe("Logs", func() {
 
 					messageChan <- "hello"
 
-					time.Sleep(time.Second)
+					time.Sleep(50 * time.Millisecond)
 
 					close(messageChan)
 					close(errChan)
