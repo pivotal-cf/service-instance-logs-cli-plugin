@@ -18,7 +18,7 @@ import (
 
 var (
 	numberOfLogEntriesReturned int64
-	writeOldestMessagesFirst   bool
+	writeOldestMessagesLast    bool
 )
 
 type HTTPEventEmitter struct {
@@ -67,10 +67,10 @@ func dumpServiceLogs(rw http.ResponseWriter, r *http.Request) {
 	sender := envelope_sender.NewEnvelopeSender(emitter)
 
 	var secondsInPastGenerator func() int64
-	if writeOldestMessagesFirst {
-		secondsInPastGenerator = makeDescendingGenerator(numberOfLogEntriesReturned)
-	} else {
+	if writeOldestMessagesLast {
 		secondsInPastGenerator = makeAscendingGenerator()
+	} else {
+		secondsInPastGenerator = makeDescendingGenerator(numberOfLogEntriesReturned)
 	}
 
 	var i int64
@@ -435,14 +435,14 @@ entries for a fake SCS service.
 
 	addrPtr := flag.String("addr", "localhost:8888", "Log server address")
 	numberOfLogEntriesReturnedPtr := flag.Int64("num", 200, "Number of log entries to return")
-	oldestFirstPtr := flag.Bool("oldfirst", false, "Write older timestamped messages to log first")
+	oldLastPtr := flag.Bool("oldlast", false, "Write older timestamped messages to log last")
 	flag.Parse()
 
 	numberOfLogEntriesReturned = *numberOfLogEntriesReturnedPtr
-	writeOldestMessagesFirst = *oldestFirstPtr
+	writeOldestMessagesLast = *oldLastPtr
 
 	log.SetFlags(0)
-	log.Printf("Server starting on %s", *addrPtr)
+	fmt.Printf("Server starting on %s\n", *addrPtr)
 
 	http.HandleFunc("/v2/info", apiInfo)
 	http.HandleFunc("/login", login)
