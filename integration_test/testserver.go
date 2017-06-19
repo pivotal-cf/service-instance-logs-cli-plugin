@@ -453,7 +453,7 @@ entries for a fake SCS service.
 	http.HandleFunc("/v2/services", servicesInfo)
 	http.HandleFunc("/v2/spaces/test-space-guid/service_instances", serviceInstances)
 	http.HandleFunc("/v2/services/test-service-guid", testServiceInstanceInfo)
-	http.HandleFunc("/apps/test-service-instance-guid/recentlogs", dumpServiceLogs)
+	http.HandleFunc("/logs/test-service-instance-guid/recentlogs", dumpServiceLogs)
 
 	if err := http.ListenAndServe(*addrPtr, nil); err != nil {
 		log.Fatal(err)

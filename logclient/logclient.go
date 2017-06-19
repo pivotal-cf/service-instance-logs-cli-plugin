@@ -3,6 +3,7 @@ package logclient
 import (
 	"crypto/tls"
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/cloudfoundry/noaa"
@@ -34,9 +35,21 @@ func (builder *logClientBuilder) InsecureSkipVerify(skipVerify bool) LogClientBu
 }
 
 func (builder *logClientBuilder) Build() LogClient {
+	cons := consumer.New(builder.endpoint, &tls.Config{InsecureSkipVerify: builder.insecureSkipVerify}, nil)
+	recentPathBuilder := func(trafficControllerUrl *url.URL, appGuid string, endpoint string) string {
+		scheme := "https"
+		if trafficControllerUrl.Scheme == "ws" {
+			scheme = "http"
+		}
+
+		return fmt.Sprintf("%s://%s/logs/%s/%s", scheme, trafficControllerUrl.Host, appGuid, endpoint)
+	}
+
+	cons.SetRecentPathBuilder(recentPathBuilder)
+
 	return &logClient{
 		endpoint: builder.endpoint,
-		consumer: consumer.New(builder.endpoint, &tls.Config{InsecureSkipVerify: builder.insecureSkipVerify}, nil),
+		consumer: cons,
 		sorter:   &sorter{},
 	}
 }
