@@ -3,20 +3,22 @@ package logclient_test
 import (
 	"net/url"
 
+	"os"
+
 	"github.com/cloudfoundry/noaa/consumer"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient/logclientfakes"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient"
+	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient/logclientfakes"
 )
 
 var _ = Describe("LogclientBuilder", func() {
 	var (
 		fakeConsumer *logclientfakes.FakeConsumer
-		builder logclient.LogClientBuilder
+		builder      logclient.LogClientBuilder
 	)
 
-	BeforeEach(func() {
+	JustBeforeEach(func() {
 		fakeConsumer = &logclientfakes.FakeConsumer{}
 		builder = logclient.NewLogClientBuilder()
 		if b, ok := builder.(logclient.BuildWithConsumer); ok {
@@ -26,10 +28,51 @@ var _ = Describe("LogclientBuilder", func() {
 		}
 	})
 
+	Context("DEBUG environment variable tests", func() {
+		var (
+			debugWasSet   bool
+			oldDebugValue string
+		)
+
+		BeforeEach(func() {
+			oldDebugValue, debugWasSet = os.LookupEnv("DEBUG")
+		})
+
+		AfterEach(func() {
+			if debugWasSet {
+				os.Setenv("DEBUG", oldDebugValue)
+			}
+		})
+
+		Context("when $DEBUG is not set", func() {
+			BeforeEach(func() {
+				os.Unsetenv("DEBUG")
+			})
+
+			It("should not set debug printing", func() {
+				Expect(fakeConsumer.SetDebugPrinterCallCount()).To(Equal(0))
+			})
+		})
+
+		Context("when $DEBUG is  set", func() {
+			BeforeEach(func() {
+				os.Setenv("DEBUG", "true")
+			})
+
+			AfterEach(func() {
+				os.Unsetenv("DEBUG")
+			})
+
+			It("should set debug printing", func() {
+				Expect(fakeConsumer.SetDebugPrinterCallCount()).To(Equal(1))
+			})
+		})
+	})
+
 	Describe("recent path builder", func() {
 		var recentPathBuilder consumer.RecentPathBuilder
 
-		BeforeEach(func() {
+		JustBeforeEach(func() {
 			recentPathBuilder = fakeConsumer.SetRecentPathBuilderArgsForCall(0)
 		})
 
@@ -53,7 +96,7 @@ var _ = Describe("LogclientBuilder", func() {
 	Describe("stream path builder", func() {
 		var streamPathBuilder consumer.StreamPathBuilder
 
-		BeforeEach(func() {
+		JustBeforeEach(func() {
 			streamPathBuilder = fakeConsumer.SetStreamPathBuilderArgsForCall(0)
 		})
 
@@ -62,7 +105,7 @@ var _ = Describe("LogclientBuilder", func() {
 		})
 
 		It("should correctly compute the stream path", func() {
-		    Expect(streamPathBuilder("appguid")).To(Equal("/logs/appguid/stream"))
+			Expect(streamPathBuilder("appguid")).To(Equal("/logs/appguid/stream"))
 		})
 	})
 })

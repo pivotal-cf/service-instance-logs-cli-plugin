@@ -20,6 +20,11 @@ type FakeConsumer struct {
 	setStreamPathBuilderArgsForCall []struct {
 		b consumer.StreamPathBuilder
 	}
+	SetDebugPrinterStub        func(debugPrinter consumer.DebugPrinter)
+	setDebugPrinterMutex       sync.RWMutex
+	setDebugPrinterArgsForCall []struct {
+		debugPrinter consumer.DebugPrinter
+	}
 	RecentLogsStub        func(appGuid string, authToken string) ([]*events.LogMessage, error)
 	recentLogsMutex       sync.RWMutex
 	recentLogsArgsForCall []struct {
@@ -98,6 +103,30 @@ func (fake *FakeConsumer) SetStreamPathBuilderArgsForCall(i int) consumer.Stream
 	fake.setStreamPathBuilderMutex.RLock()
 	defer fake.setStreamPathBuilderMutex.RUnlock()
 	return fake.setStreamPathBuilderArgsForCall[i].b
+}
+
+func (fake *FakeConsumer) SetDebugPrinter(debugPrinter consumer.DebugPrinter) {
+	fake.setDebugPrinterMutex.Lock()
+	fake.setDebugPrinterArgsForCall = append(fake.setDebugPrinterArgsForCall, struct {
+		debugPrinter consumer.DebugPrinter
+	}{debugPrinter})
+	fake.recordInvocation("SetDebugPrinter", []interface{}{debugPrinter})
+	fake.setDebugPrinterMutex.Unlock()
+	if fake.SetDebugPrinterStub != nil {
+		fake.SetDebugPrinterStub(debugPrinter)
+	}
+}
+
+func (fake *FakeConsumer) SetDebugPrinterCallCount() int {
+	fake.setDebugPrinterMutex.RLock()
+	defer fake.setDebugPrinterMutex.RUnlock()
+	return len(fake.setDebugPrinterArgsForCall)
+}
+
+func (fake *FakeConsumer) SetDebugPrinterArgsForCall(i int) consumer.DebugPrinter {
+	fake.setDebugPrinterMutex.RLock()
+	defer fake.setDebugPrinterMutex.RUnlock()
+	return fake.setDebugPrinterArgsForCall[i].debugPrinter
 }
 
 func (fake *FakeConsumer) RecentLogs(appGuid string, authToken string) ([]*events.LogMessage, error) {
@@ -211,6 +240,8 @@ func (fake *FakeConsumer) Invocations() map[string][][]interface{} {
 	defer fake.setRecentPathBuilderMutex.RUnlock()
 	fake.setStreamPathBuilderMutex.RLock()
 	defer fake.setStreamPathBuilderMutex.RUnlock()
+	fake.setDebugPrinterMutex.RLock()
+	defer fake.setDebugPrinterMutex.RUnlock()
 	fake.recentLogsMutex.RLock()
 	defer fake.recentLogsMutex.RUnlock()
 	fake.tailingLogsMutex.RLock()

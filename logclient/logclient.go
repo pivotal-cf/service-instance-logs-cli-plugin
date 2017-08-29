@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"time"
 
+	"os"
+
 	"github.com/cloudfoundry/noaa"
 	"github.com/cloudfoundry/noaa/consumer"
 	"github.com/cloudfoundry/sonde-go/events"
@@ -34,12 +36,23 @@ func (builder *logClientBuilder) InsecureSkipVerify(skipVerify bool) LogClientBu
 	return builder
 }
 
+type debugPrinter struct{}
+
+func (dp *debugPrinter) Print(title, dump string) {
+	fmt.Fprintf(os.Stderr,"%s:\n        %s\n", title, dump)
+}
+
 func (builder *logClientBuilder) Build() LogClient {
 	cons := consumer.New(builder.endpoint, &tls.Config{InsecureSkipVerify: builder.insecureSkipVerify}, nil)
 	return builder.BuildFromConsumer(cons)
 }
 
 func (builder *logClientBuilder) BuildFromConsumer(cons Consumer) LogClient {
+	_, tracing := os.LookupEnv("DEBUG")
+	if tracing {
+		dbgPrinter := &debugPrinter{}
+		cons.SetDebugPrinter(dbgPrinter)
+	}
 	recentPathBuilder := func(trafficControllerUrl *url.URL, appGuid string, endpoint string) string {
 		scheme := "https"
 		if trafficControllerUrl.Scheme == "ws" {
@@ -82,6 +95,7 @@ type LogClient interface {
 type Consumer interface {
 	SetRecentPathBuilder(b consumer.RecentPathBuilder)
 	SetStreamPathBuilder(b consumer.StreamPathBuilder)
+	SetDebugPrinter(debugPrinter consumer.DebugPrinter)
 	RecentLogs(appGuid string, authToken string) ([]*events.LogMessage, error)
 	TailingLogs(appGuid, authToken string) (<-chan *events.LogMessage, <-chan error)
 }
