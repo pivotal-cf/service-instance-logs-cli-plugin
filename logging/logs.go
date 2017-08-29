@@ -7,6 +7,8 @@ import (
 	"strings"
 	"sync"
 
+	"net/url"
+
 	"code.cloudfoundry.org/cli/plugin"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/cfutil"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient"
@@ -73,6 +75,13 @@ func Logs(cliConnection plugin.CliConnection, w io.Writer, serviceInstanceName s
 		return err
 	}
 
+	if !recent {
+		serviceInstanceLogsEndpoint, err = convertServiceInstanceLogsEndpoint(serviceInstanceLogsEndpoint)
+		if err != nil {
+			return err
+		}
+	}
+
 	logClient := logClientBuilder.Endpoint(serviceInstanceLogsEndpoint).Build()
 
 	// Print a blank line.
@@ -129,4 +138,18 @@ func obtainServiceInstanceLogsEndpoint(cliConnection plugin.CliConnection, servi
 	}
 
 	return extra.ServiceInstanceLogsEndpoint, nil
+}
+
+func convertServiceInstanceLogsEndpoint(endpoint string) (string, error) {
+	u, err := url.Parse(endpoint)
+	if err != nil {
+		return "", err
+	}
+	if u.Scheme == "https" {
+		u.Scheme = "wss"
+	} else {
+		u.Scheme = "ws"
+	}
+	u.Path = ""
+	return u.String(), nil
 }
