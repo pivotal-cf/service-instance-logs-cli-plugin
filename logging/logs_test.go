@@ -2,6 +2,7 @@ package logging_test
 
 import (
 	"errors"
+
 	"sync"
 	"time"
 
@@ -16,20 +17,22 @@ import (
 
 var _ = Describe("Logs", func() {
 	const (
-		errMessage          = "no dice"
-		serviceInstanceName = "siname"
-		testToken           = "some-token"
-		serviceGUID         = "870cdf18-7e15-435a-8459-6c38a8452d79"
+		errMessage              = "no dice"
+		abnormalCloseErrMessage = "close 1006 (abnormal closure)"
+		serviceInstanceName     = "siname"
+		testToken               = "some-token"
+		serviceGUID             = "870cdf18-7e15-435a-8459-6c38a8452d79"
 	)
 
 	var (
-		fakeCliConnection    *pluginfakes.FakeCliConnection
-		recent               bool
-		fakeLogClientBuilder *logclientfakes.FakeLogClientBuilder
-		fakeLogClient        *logclientfakes.FakeLogClient
-		err                  error
-		testError            error
-		output               *gbytes.Buffer
+		fakeCliConnection      *pluginfakes.FakeCliConnection
+		recent                 bool
+		fakeLogClientBuilder   *logclientfakes.FakeLogClientBuilder
+		fakeLogClient          *logclientfakes.FakeLogClient
+		err                    error
+		testError              error
+		abnormalCloseTestError error
+		output                 *gbytes.Buffer
 	)
 
 	BeforeEach(func() {
@@ -42,6 +45,7 @@ var _ = Describe("Logs", func() {
 		fakeLogClientBuilder.BuildReturns(fakeLogClient)
 		recent = true
 		testError = errors.New(errMessage)
+		abnormalCloseTestError = errors.New(abnormalCloseErrMessage)
 		output = gbytes.NewBuffer()
 
 		servicesOutput := []string{
@@ -289,6 +293,34 @@ var _ = Describe("Logs", func() {
 
 			It("should return the error", func() {
 				Expect(err).To(Equal(testError))
+			})
+		})
+
+		Context("when an abnormal close error is sent to the error channel", func() {
+			var wg sync.WaitGroup
+
+			// Send an abnormal close error and then soon after close the message and error channels
+			BeforeEach(func() {
+				errChan <- abnormalCloseTestError
+
+				wg = sync.WaitGroup{}
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					time.Sleep(50 * time.Millisecond)
+					close(messageChan)
+					close(errChan)
+				}()
+			})
+
+			AfterEach(func() {
+				wg.Wait()
+			})
+
+			// Absence of an error demonstrates the previously sent abnormal close error
+			// was consumed and did not break the error channel read and process loop
+			It("should return normally after the channels are closed", func() {
+				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 

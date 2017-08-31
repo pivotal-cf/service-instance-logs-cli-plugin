@@ -9,6 +9,8 @@ import (
 
 	"net/url"
 
+	"errors"
+
 	"code.cloudfoundry.org/cli/plugin"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/cfutil"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient"
@@ -44,15 +46,31 @@ func tailLogs(logClient logclient.LogClient, serviceGUID string, accessToken str
 		}
 	}()
 
-	err := <-errorChan
-	if err != nil {
-		return err
+	exitChan := make(chan error, 1)
+	errorChanNotOK := errors.New("errorChan not OK")
+	go func() {
+		for {
+			err, ok := <-errorChan
+			if !ok {
+				exitChan <- errorChanNotOK
+				break
+			}
+
+			if !strings.Contains(err.Error(), "1006") {
+				exitChan <- err
+				break
+			}
+		}
+	}()
+
+	exitErr := <-exitChan
+	if exitErr != errorChanNotOK {
+		return exitErr
 	}
 
 	wg.Wait()
 
 	return nil
-
 }
 
 func Logs(cliConnection plugin.CliConnection, w io.Writer, serviceInstanceName string, recent bool, logClientBuilder logclient.LogClientBuilder) error {
