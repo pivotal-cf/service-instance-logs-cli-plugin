@@ -3,7 +3,10 @@ package logclient
 import (
 	"crypto/tls"
 	"fmt"
+	"net/url"
 	"time"
+
+	"os"
 
 	"github.com/cloudfoundry/noaa"
 	"github.com/cloudfoundry/noaa/consumer"
@@ -33,10 +36,43 @@ func (builder *logClientBuilder) InsecureSkipVerify(skipVerify bool) LogClientBu
 	return builder
 }
 
+type debugPrinter struct{}
+
+func (dp *debugPrinter) Print(title, dump string) {
+	fmt.Fprintf(os.Stderr,"%s:\n        %s\n", title, dump)
+}
+
 func (builder *logClientBuilder) Build() LogClient {
+	cons := consumer.New(builder.endpoint, &tls.Config{InsecureSkipVerify: builder.insecureSkipVerify}, nil)
+	return builder.BuildFromConsumer(cons)
+}
+
+func (builder *logClientBuilder) BuildFromConsumer(cons Consumer) LogClient {
+	_, tracing := os.LookupEnv("DEBUG")
+	if tracing {
+		dbgPrinter := &debugPrinter{}
+		cons.SetDebugPrinter(dbgPrinter)
+	}
+	recentPathBuilder := func(trafficControllerUrl *url.URL, appGuid string, endpoint string) string {
+		scheme := "https"
+		if trafficControllerUrl.Scheme == "ws" {
+			scheme = "http"
+		}
+
+		return fmt.Sprintf("%s://%s/logs/%s/%s", scheme, trafficControllerUrl.Host, appGuid, endpoint)
+	}
+
+	cons.SetRecentPathBuilder(recentPathBuilder)
+
+	streamPathBuilder := func(appGuid string) string {
+		return fmt.Sprintf("/logs/%s/stream", appGuid)
+	}
+
+	cons.SetStreamPathBuilder(streamPathBuilder)
+
 	return &logClient{
 		endpoint: builder.endpoint,
-		consumer: consumer.New(builder.endpoint, &tls.Config{InsecureSkipVerify: builder.insecureSkipVerify}, nil),
+		consumer: cons,
 		sorter:   &sorter{},
 	}
 }
@@ -50,7 +86,6 @@ type LogClientBuilder interface {
 
 //go:generate counterfeiter -o logclientfakes/fake_log_client.go . LogClient
 type LogClient interface {
-	// TODO: do we need to sort the recent logs? Compare the cf CLI
 	RecentLogs(serviceGUID string, authToken string) ([]string, error)
 	TailingLogs(serviceGUID string, authToken string) (<-chan string, <-chan error)
 }
@@ -58,6 +93,9 @@ type LogClient interface {
 // Wrap interactions with NOAA consumer.consumer inside an interface whose behaviour can be faked in tests
 //go:generate counterfeiter -o logclientfakes/fake_consumer.go . Consumer
 type Consumer interface {
+	SetRecentPathBuilder(b consumer.RecentPathBuilder)
+	SetStreamPathBuilder(b consumer.StreamPathBuilder)
+	SetDebugPrinter(debugPrinter consumer.DebugPrinter)
 	RecentLogs(appGuid string, authToken string) ([]*events.LogMessage, error)
 	TailingLogs(appGuid, authToken string) (<-chan *events.LogMessage, <-chan error)
 }

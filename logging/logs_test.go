@@ -50,7 +50,7 @@ var _ = Describe("Logs", func() {
 			`"resources": [`,
 			`{`,
 			`"entity": {`,
-			`"extra": "{\"documentationUrl\":\"http://docs.pivotal.io/spring-cloud-services/\",\"serviceInstanceLogsEndpoint\":\"wss://service-instance-logs/\"}"`,
+			`"extra": "{\"documentationUrl\":\"http://docs.pivotal.io/spring-cloud-services/\",\"serviceInstanceLogsEndpoint\":\"https://service-instance-logs/logs/\"}"`,
 			`}`,
 			`}`,
 			`]`,
@@ -158,7 +158,7 @@ var _ = Describe("Logs", func() {
 
 	Context("when logs endpoint is found", func() {
 		It("should pass the endpoint to the log client builder", func() {
-			Expect(fakeLogClientBuilder.EndpointArgsForCall(0)).To(Equal("wss://service-instance-logs/"))
+			Expect(fakeLogClientBuilder.EndpointArgsForCall(0)).To(Equal("https://service-instance-logs/logs/"))
 		})
 	})
 
@@ -217,6 +217,54 @@ var _ = Describe("Logs", func() {
 			AfterEach(func() {
 				close(messageChan)
 				close(errChan)
+			})
+
+			It("should correctly transform the endpoint passed to the LogClientBuilder", func() {
+				Expect(fakeLogClientBuilder.EndpointCallCount()).To(Equal(1))
+				Expect(fakeLogClientBuilder.EndpointArgsForCall(0)).To(Equal("wss://service-instance-logs"))
+			})
+
+			Context("when the logs endpoint is insecure", func() {
+				BeforeEach(func() {
+					servicesOutput := []string{
+						`{`,
+						`"total_results": 1,`,
+						`"resources": [`,
+						`{`,
+						`"entity": {`,
+						`"extra": "{\"documentationUrl\":\"http://docs.pivotal.io/spring-cloud-services/\",\"serviceInstanceLogsEndpoint\":\"http://service-instance-logs/logs/\"}"`,
+						`}`,
+						`}`,
+						`]`,
+						`}`}
+					fakeCliConnection.CliCommandWithoutTerminalOutputReturns(servicesOutput, nil)
+				})
+
+				It("should correctly transform the endpoint passed to the LogClientBuilder", func() {
+					Expect(fakeLogClientBuilder.EndpointCallCount()).To(Equal(1))
+					Expect(fakeLogClientBuilder.EndpointArgsForCall(0)).To(Equal("ws://service-instance-logs"))
+				})
+			})
+
+			Context("when the logs endpoint is malformed", func() {
+				BeforeEach(func() {
+					servicesOutput := []string{
+						`{`,
+						`"total_results": 1,`,
+						`"resources": [`,
+						`{`,
+						`"entity": {`,
+						`"extra": "{\"documentationUrl\":\"http://docs.pivotal.io/spring-cloud-services/\",\"serviceInstanceLogsEndpoint\":\"::\"}"`,
+						`}`,
+						`}`,
+						`]`,
+						`}`}
+					fakeCliConnection.CliCommandWithoutTerminalOutputReturns(servicesOutput, nil)
+				})
+
+				It("should return a suitable error", func() {
+					Expect(err.Error()).To(ContainSubstring("missing protocol scheme"))
+				})
 			})
 
 			It("should call the log client tailing logs method", func() {

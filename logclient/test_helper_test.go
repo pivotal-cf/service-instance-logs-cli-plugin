@@ -14,3 +14,7 @@ type FieldSetter interface {
 	SetConsumer(consumer Consumer)
 	SetSorter(sorter Sorter)
 }
+
+type BuildWithConsumer interface {
+	BuildFromConsumer(cons Consumer) LogClient
+}

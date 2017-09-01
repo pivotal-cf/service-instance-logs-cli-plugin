@@ -159,10 +159,10 @@
 			"revisionTime": "2017-05-26T20:39:36Z"
 		},
 		{
-			"checksumSHA1": "GF0waB+pe/5ugAZGL2cNEvjV6q4=",
+			"checksumSHA1": "LJfKvrjY9CxCHEifj6j5FlErrMs=",
 			"path": "github.com/cloudfoundry/noaa/consumer",
-			"revision": "ea8759ba3628ce69b0c332ccea75ac6e373a938b",
-			"revisionTime": "2017-05-26T20:39:36Z"
+			"revision": "7704643fe84d8b7cb7e3185031cfa3d5caa51c62",
+			"revisionTime": "2017-08-30T20:00:06Z"
 		},
 		{
 			"checksumSHA1": "h1rUpiRmfBEPHwIeFM1+aVP7ln4=",
