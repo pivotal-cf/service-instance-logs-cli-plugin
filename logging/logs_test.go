@@ -296,31 +296,30 @@ var _ = Describe("Logs", func() {
 			})
 		})
 
-		Context("when an abnormal close error is sent to the error channel", func() {
+		Context("when an abnormal close error is sent to the error channel followed by a separate test error", func() {
 			var wg sync.WaitGroup
 
-			// Send an abnormal close error and then soon after close the message and error channels
 			BeforeEach(func() {
 				errChan <- abnormalCloseTestError
 
+				// Send separate error. Since the error channel is unbuffered, use goroutine to avoid deadlock
 				wg = sync.WaitGroup{}
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
 					time.Sleep(50 * time.Millisecond)
-					close(messageChan)
-					close(errChan)
+					errChan <- testError
 				}()
 			})
 
 			AfterEach(func() {
 				wg.Wait()
+				close(messageChan)
+				close(errChan)
 			})
 
-			// Absence of an error demonstrates the previously sent abnormal close error
-			// was consumed and did not break the error channel read and process loop
-			It("should return normally after the channels are closed", func() {
-				Expect(err).NotTo(HaveOccurred())
+			It("should ignore the abnormal close error and return the subsequent test error", func() {
+				Expect(err).To(Equal(testError))
 			})
 		})
 
