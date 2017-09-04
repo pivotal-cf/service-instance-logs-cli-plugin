@@ -302,6 +302,7 @@ var _ = Describe("Logs", func() {
 			BeforeEach(func() {
 				errChan <- abnormalCloseTestError
 
+				// Send separate error. Since the error channel is unbuffered, use goroutine to avoid deadlock
 				wg = sync.WaitGroup{}
 				wg.Add(1)
 				go func() {
