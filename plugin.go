@@ -22,9 +22,9 @@ import (
 	"code.cloudfoundry.org/cli/plugin"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/cli"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/format"
+	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logging"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/pluginutil"
-	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient"
 )
 
 // Plugin version. Substitute "<major>.<minor>.<build>" at build time, e.g. using -ldflags='-X main.pluginVersion=1.2.3'
@@ -99,7 +99,7 @@ func failInstallation(format string, inserts ...interface{}) {
 
 func (c *Plugin) GetMetadata() plugin.PluginMetadata {
 	return plugin.PluginMetadata{
-		Name:    "SILogs",
+		Name:    "service-instance-logging",
 		Version: pluginutil.ParsePluginVersion(pluginVersion, failInstallation),
 		MinCliVersion: plugin.VersionType{
 			Major: 6,
