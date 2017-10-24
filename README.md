@@ -38,7 +38,7 @@ The plugin's commands may then be listed by issuing `cf help`.
 
 To update the plugin, uninstall it as follows and then re-install the plugin as above:
 ```bash
-$ cf uninstall-plugin SILogs
+$ cf uninstall-plugin service-instance-logging
 ```
 
 ## Command docs
