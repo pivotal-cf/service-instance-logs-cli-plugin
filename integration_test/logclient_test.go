@@ -21,7 +21,7 @@ import (
 
 const (
 	testServerPort              = "8888"
-	testServerAddress           = "localhost:" + testServerPort
+	testServerAddress           = "0.0.0.0:" + testServerPort
 	endpointUrl                 = "ws://" + testServerAddress
 	requestedNumberOfLogEntries = 10
 	logTimestampFormat          = "2006-01-02T15:04:05.00-0700"
