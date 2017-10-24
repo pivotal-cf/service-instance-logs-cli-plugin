@@ -117,7 +117,7 @@ func apiInfo(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("X-Content-Type-Options", "nosniff")
 	rw.Header().Set("X-Vcap-Request-Id", "dd8699dd-e5c9-4951-4b83-4fc2c70de676")
 	rw.Header().Add("X-Vcap-Request-Id", "dd8699dd-e5c9-4951-4b83-4fc2c70de676::101c0ae8-7aff-40d3-8af8-eddb65205492")
-	io.WriteString(rw, `{ "api_version": "2.75.0", "app_ssh_endpoint": "localhost:2222", "app_ssh_host_key_fingerprint": "9f:ae:12:42:19:33:6e:cc:5b:5b:44:af:13:a1:04:22", "app_ssh_oauth_client": "ssh-proxy", "authorization_endpoint": "http://localhost:8888", "build": "", "description": "fake api for integration testing purposes", "doppler_logging_endpoint": "wss://localhost:443", "logging_endpoint": "wss://localhost:443", "min_cli_version": "6.22.0", "min_recommended_cli_version": "6.23.0", "name": "integration", "routing_endpoint": "https://localhost:8888/routing", "support": "https://support.pivotal.io", "token_endpoint": "http://localhost:8888", "version": 0}`)
+	io.WriteString(rw, `{ "api_version": "2.75.0", "app_ssh_endpoint": "0.0.0.0:2222", "app_ssh_host_key_fingerprint": "9f:ae:12:42:19:33:6e:cc:5b:5b:44:af:13:a1:04:22", "app_ssh_oauth_client": "ssh-proxy", "authorization_endpoint": "http://0.0.0.0:8888", "build": "", "description": "fake api for integration testing purposes", "doppler_logging_endpoint": "wss://0.0.0.0:443", "logging_endpoint": "wss://0.0.0.0:443", "min_cli_version": "6.22.0", "min_recommended_cli_version": "6.23.0", "name": "integration", "routing_endpoint": "https://0.0.0.0:8888/routing", "support": "https://support.pivotal.io", "token_endpoint": "http://0.0.0.0:8888", "version": 0}`)
 }
 
 //noinspection GoUnusedParameter
@@ -159,7 +159,7 @@ func servicesInfo(rw http.ResponseWriter, r *http.Request) {
       "active": true,
       "bindable": true,
       "unique_id": "unique-id",
-      "extra": "{\"serviceInstanceLogsEndpoint\":\"ws://localhost:8888\"}",
+      "extra": "{\"serviceInstanceLogsEndpoint\":\"ws://0.0.0.0:8888\"}",
       "tags": ["configuration", "spring-cloud"],
       "requires": [],
       "documentation_url": null,
@@ -360,7 +360,7 @@ func testServiceInstanceInfo(rw http.ResponseWriter, r *http.Request) {
     "active": true,
     "bindable": true,
     "unique_id": "test-service-unique-id",
-    "extra": "{ \"longDescription\": \"Whatevs\", \"documentationUrl\": \"http://docs.pivotal.io/spring-cloud-services/\", \"providerDisplayName\": \"Pivotal\", \"displayName\": \"ConfigServer\", \"supportUrl\": \"http://support.pivotal.io/\",\"serviceInstanceLogsEndpoint\":\"wss://localhost:8888\"}",
+    "extra": "{ \"longDescription\": \"Whatevs\", \"documentationUrl\": \"http://docs.pivotal.io/spring-cloud-services/\", \"providerDisplayName\": \"Pivotal\", \"displayName\": \"ConfigServer\", \"supportUrl\": \"http://support.pivotal.io/\",\"serviceInstanceLogsEndpoint\":\"wss://0.0.0.0:8888\"}",
     "tags": ["configuration", "spring-cloud"],
     "requires": [],
     "documentation_url": null,
@@ -433,7 +433,7 @@ entries for a fake SCS service.
 		fmt.Println()
 	}
 
-	addrPtr := flag.String("addr", "localhost:8888", "Log server address")
+	addrPtr := flag.String("addr", "0.0.0.0:8888", "Log server address")
 	numberOfLogEntriesReturnedPtr := flag.Int64("num", 200, "Number of log entries to return")
 	oldLastPtr := flag.Bool("oldlast", false, "Write older timestamped messages to log last")
 	flag.Parse()
