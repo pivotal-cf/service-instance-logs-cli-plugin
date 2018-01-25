@@ -30,6 +30,8 @@ import (
 // Plugin version. Substitute "<major>.<minor>.<build>" at build time, e.g. using -ldflags='-X main.pluginVersion=1.2.3'
 var pluginVersion = "invalid version - plugin was not built correctly"
 
+const serivceLogsCommand = "service-logs"
+
 // Plugin is a struct implementing the Plugin interface, defined by the core CLI, which can
 // be found in "code.cloudfoundry.org/cli/plugin/plugin.go".
 type Plugin struct{}
@@ -44,7 +46,7 @@ func (c *Plugin) Run(cliConnection plugin.CliConnection, args []string) {
 
 	switch args[0] {
 
-	case "service-instance-logs":
+	case serivceLogsCommand:
 		serviceInstanceName := getServiceInstanceName(positionalArgs, args[0])
 		var behaviour string
 		if recent {
@@ -108,11 +110,11 @@ func (c *Plugin) GetMetadata() plugin.PluginMetadata {
 		},
 		Commands: []plugin.Command{
 			{
-				Name:     "service-instance-logs",
+				Name:     serivceLogsCommand,
 				HelpText: "Tail or show recent logs for a service instance",
 				Alias:    "sil",
 				UsageDetails: plugin.Usage{
-					Usage: "   cf service-instance-logs SERVICE_INSTANCE_NAME",
+					Usage: "   cf " + serivceLogsCommand + " SERVICE_INSTANCE_NAME",
 					Options: map[string]string{"--skip-ssl-validation": cli.SkipSslValidationUsage,
 						"--recent": cli.RecentUsage},
 				},

@@ -5,14 +5,14 @@ The following commands can be executed using the Service Instance Logs [Cloud Fo
 # Service Instance Logs CLI Docs
 
 
-## `cf service-instance-logs`
+## `cf service-logs`
 
 ```
 NAME:
-   service-instance-logs - Tail or show recent logs for a service instance
+   service-logs - Tail or show recent logs for a service instance
 
 USAGE:
-      cf service-instance-logs SERVICE_INSTANCE_NAME
+      cf service-logs SERVICE_INSTANCE_NAME
 
 ALIAS:
    sil
