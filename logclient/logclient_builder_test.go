@@ -105,7 +105,7 @@ var _ = Describe("LogclientBuilder", func() {
 		})
 
 		It("should correctly compute the stream path", func() {
-			Expect(streamPathBuilder("appguid")).To(Equal("/logs/appguid/stream"))
+			Expect(streamPathBuilder("appguid")).To(Equal("appguid/stream"))
 		})
 	})
 })
