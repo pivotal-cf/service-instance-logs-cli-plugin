@@ -65,7 +65,7 @@ func (builder *logClientBuilder) BuildFromConsumer(cons Consumer) LogClient {
 	cons.SetRecentPathBuilder(recentPathBuilder)
 
 	streamPathBuilder := func(appGuid string) string {
-		return fmt.Sprintf("/logs/%s/stream", appGuid)
+		return fmt.Sprintf("%s/stream", appGuid)
 	}
 
 	cons.SetStreamPathBuilder(streamPathBuilder)
