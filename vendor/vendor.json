@@ -5,7 +5,7 @@
 		{
 			"checksumSHA1": "rvaiyC5SczJJkhEN1myZVgQgsJw=",
 			"path": "code.cloudfoundry.org/cli/cf/flags",
-			"revision": "4bf6772d189913f03d6ca5e597f2d88f4a344717",
+			"revision": "v6.34.1",
 			"revisionTime": "2017-01-07T01:22:35Z"
 		},
 		{
@@ -51,9 +51,9 @@
 			"revisionTime": "2016-10-09T05:10:34Z"
 		},
 		{
-			"checksumSHA1": "98tiBpTX7NBrAHEqcsT8GJPfwps=",
+			"checksumSHA1": "3ME8sZm1sxAtfb8BM4si5YlTivw=",
 			"path": "github.com/cloudfoundry/cli/cf/flags",
-			"revision": "4bf6772d189913f03d6ca5e597f2d88f4a344717",
+			"revision": "v6.34.1",
 			"revisionTime": "2017-01-07T01:22:35Z"
 		},
 		{
@@ -155,31 +155,31 @@
 		{
 			"checksumSHA1": "GaNNhXPl7kzmp5prr3JaFvGvpQ4=",
 			"path": "github.com/cloudfoundry/noaa",
-			"revision": "ea8759ba3628ce69b0c332ccea75ac6e373a938b",
+			"revision": "9d59e2b25abb53ee8907660061e12ef68bbb4503",
 			"revisionTime": "2017-05-26T20:39:36Z"
 		},
 		{
 			"checksumSHA1": "LJfKvrjY9CxCHEifj6j5FlErrMs=",
 			"path": "github.com/cloudfoundry/noaa/consumer",
-			"revision": "7704643fe84d8b7cb7e3185031cfa3d5caa51c62",
+			"revision": "9d59e2b25abb53ee8907660061e12ef68bbb4503",
 			"revisionTime": "2017-08-30T20:00:06Z"
 		},
 		{
 			"checksumSHA1": "h1rUpiRmfBEPHwIeFM1+aVP7ln4=",
 			"path": "github.com/cloudfoundry/noaa/consumer/internal",
-			"revision": "ea8759ba3628ce69b0c332ccea75ac6e373a938b",
+			"revision": "9d59e2b25abb53ee8907660061e12ef68bbb4503",
 			"revisionTime": "2017-05-26T20:39:36Z"
 		},
 		{
 			"checksumSHA1": "ujnvXeQW5PxPPByaWYhZaWg+NDs=",
 			"path": "github.com/cloudfoundry/noaa/errors",
-			"revision": "ea8759ba3628ce69b0c332ccea75ac6e373a938b",
+			"revision": "9d59e2b25abb53ee8907660061e12ef68bbb4503",
 			"revisionTime": "2017-05-26T20:39:36Z"
 		},
 		{
 			"checksumSHA1": "A2AtnQ/WUCFzK0DmDMeVWhSqmls=",
 			"path": "github.com/cloudfoundry/noaa/test_helpers",
-			"revision": "ea8759ba3628ce69b0c332ccea75ac6e373a938b",
+			"revision": "9d59e2b25abb53ee8907660061e12ef68bbb4503",
 			"revisionTime": "2017-05-26T20:39:36Z"
 		},
 		{
@@ -412,7 +412,7 @@
 			"revisionTime": "2016-11-10T18:03:13Z"
 		},
 		{
-			"checksumSHA1": "Hcmrtk+FVRHjlgSN4yD9/fDzDV4=",
+			"checksumSHA1": "GLT5GJfAoRSaN+hSTpiL0Sx/N80=",
 			"path": "github.com/onsi/gomega",
 			"revision": "f1f0f388b31eca4e2cbe7a6dd8a3a1dfddda5b1c",
 			"revisionTime": "2016-11-18T20:51:29Z"
