@@ -28,7 +28,15 @@ Plugin version: 0.0.8
 
 ## Installing
 
-To install the plugin in the `cf` CLI, first build it and then issue:
+### From CF Community
+
+To install the plugin from the [Cloud Foundry Community Plugins](https://plugins.cloudfoundry.org/), run the following command:
+
+`cf install-plugin -r CF-Community "Service Instance Logging"`
+
+### From Manual Build
+
+To install the plugin in the `cf` CLI from generated, first build it and then issue:
 ```bash
 $ cf install-plugin -f $GOPATH/bin/service-instance-logs-cli-plugin
 
