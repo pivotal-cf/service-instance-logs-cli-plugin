@@ -1,0 +1,88 @@
+---
+slack-success-notification: &slack-success-notification
+  put: alert
+  params:
+    icon_emoji: ":concourse:"
+    username: concourse
+    channel: ((scs-slack-notification-channel))
+    text: "<!here> CF SI Logs CLI plugin $BUILD_JOB_NAME has succeeded with build <$ATC_EXTERNAL_URL/builds/$BUILD_ID|$BUILD_NAME>!"
+
+slack-failure-notification: &slack-failure-notification
+  put: alert
+  params:
+    icon_emoji: ":animal-1252:"
+    username: concourse
+    channel: ((scs-slack-failure-channel))
+    text: "<!here> CF SI Logs CLI plugin $BUILD_JOB_NAME has failed with build <$ATC_EXTERNAL_URL/builds/$BUILD_ID|$BUILD_NAME>!"
+
+jobs:
+- name: build-plugin
+  serial: true
+  plan:
+  - in_parallel:
+    - get: cf-si-logs-cli-plugin
+      trigger: true
+    - get: version
+      params:
+        bump: patch
+  - task: build-plugin
+    file: cf-si-logs-cli-plugin/ci/tasks/build.yml
+    on_success:
+      in_parallel:
+      - put: cf-si-logs-cli-plugin-storage
+        params:
+          file: built-plugin/service-instance-logs-cli-plugin-darwin-amd64-*
+      - put: cf-si-logs-cli-plugin-storage
+        params:
+          file: built-plugin/service-instance-logs-cli-plugin-linux-386-*
+      - put: cf-si-logs-cli-plugin-storage
+        params:
+          file: built-plugin/service-instance-logs-cli-plugin-linux-amd64-*
+      - put: cf-si-logs-cli-plugin-storage
+        params:
+          file: built-plugin/service-instance-logs-cli-plugin-windows-386-*
+      - put: cf-si-logs-cli-plugin-storage
+        params:
+          file: built-plugin/service-instance-logs-cli-plugin-windows-amd64-*
+      - put: version
+        params: {file: version/version}
+  on_success: *slack-success-notification
+  on_failure: *slack-failure-notification
+
+resource_types:
+- name: slack-notification
+  type: registry-image
+  source:
+    repository: ((dockerhub-mirror-registry))/cfcommunity/slack-notification-resource
+    tag: latest
+
+resources:
+- name: cf-si-logs-cli-plugin
+  type: git
+  source:
+    uri: ((github-url-cf-si-logs-cli-plugin))
+    branch: ((branch))
+    ignore_paths: [version]
+
+- name: version
+  type: semver
+  source:
+    driver: git
+    uri: ((github-url-cf-si-logs-cli-plugin))
+    branch: ((branch))
+    file: version
+    initial_version: 0.0.0
+
+- name: cf-si-logs-cli-plugin-storage
+  type: s3
+  source:
+    bucket: ((scs-cf-si-logs-cli-s3-bucket-name))
+    regexp: service-instance-logs-cli-plugin-(.*)
+    access_key_id: ((scs-s3-access-key-id))
+    secret_access_key: ((scs-s3-secret-access-key))
+
+- name: alert
+  type: slack-notification
+  source:
+    # Default channel is #scs-firehose
+    url: ((scs-slack-webhook))

@@ -9,11 +9,11 @@ For information on plugin development, see
 
 ## Building
 
-To build the plugin, install go and govendor (see the [Go Development](docs/go.adoc) guide for instructions) and issue:
+To build the plugin, run:
 ```bash
 $ rm $GOPATH/bin/service-instance-logs-cli-plugin
-$ cd $GOPATH/src/github.com/pivotal-cf/service-instance-logs-cli-plugin
-$ govendor install -ldflags="-X main.pluginVersion=$(cat version)" +local
+$ cd service-instance-logs-cli-plugin
+$ go install -ldflags="-X main.pluginVersion=$(cat version)"
 ```
 This builds the plugin with the current version number in the [version file](version).
 
@@ -28,18 +28,15 @@ Plugin version: 0.0.8
 
 ## Installing
 
-### From CF Community
-
-To install the plugin from the [Cloud Foundry Community Plugins](https://plugins.cloudfoundry.org/), run the following command:
-
-`cf install-plugin -r CF-Community "Service Instance Logging"`
-
-### From Manual Build
-
-To install the plugin in the `cf` CLI from generated, first build it and then issue:
+To install the plugin in the `cf` CLI, first build it and then issue:
 ```bash
 $ cf install-plugin -f $GOPATH/bin/service-instance-logs-cli-plugin
 
+```
+
+You can also install the plugin from the [Cloud Foundry cf-cli plugins repository](https://plugins.cloudfoundry.org):
+```bash
+$ cf install-plugin -r CF-Community "Service Instance Logging"
 ```
 
 The plugin's commands may then be listed by issuing `cf help`.
@@ -58,27 +55,25 @@ $ cd docs
 $ ./generate-cli-docs-from-help.sh
 ```
 
+This needs to be done whenever commands are added, modified, or deleted. Note that the script contains a list of commands which needs to be kept in step with the available commands.
+
 The generated docs may be viewed [here](docs/cli.md).
-
-## Go Development
-
-See the [Go Development](docs/go.adoc) guide.
-(If you just want to build and install the plugin, simply install go and govendor.)
 
 ## Testing
 
+First [install Ginkgo](https://onsi.github.io/ginkgo/).
+
 Run the tests as follows:
 ```bash
-$ cd $GOPATH/src/github.com/pivotal-cf/service-instance-logs-cli-plugin
-$ govendor test +local
+$ cd spring-cloud-services-cli-plugin
+$ ginkgo -r
 ```
 
 ## License
 
 The Service Instance Logs CLI plugin is Open Source software released under the
-[Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
+[Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0.html).
 
 ## Contributing
 
 Contributions are welcomed. Please refer to the [Contributor's Guide](CONTRIBUTING.md).
-

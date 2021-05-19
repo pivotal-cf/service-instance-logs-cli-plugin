@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+set_pipeline() {
+  fly --target scs set-pipeline --pipeline cf-si-logs-cli-plugin \
+    --config pipeline.yml \
+    --var branch=main
+}
+
+main() {
+  fly --target scs sync
+
+  pushd "$(dirname $0)/../ci" > /dev/null
+
+  set_pipeline
+
+  popd > /dev/null
+}
+
+main

@@ -1,0 +1,23 @@
+platform: linux
+
+image_resource:
+  type: registry-image
+  source:
+    repository: ((dockerhub-mirror-registry))/library/golang
+    tag: 1.16
+
+inputs:
+  - name: cf-si-logs-cli-plugin
+  - name: version
+
+outputs:
+  - name: built-plugin
+
+run:
+  path: cf-si-logs-cli-plugin/ci/tasks/build.sh
+
+params:
+  BUILT_PLUGIN_OUTPUT: built-plugin
+  CF_CLI_PLUGIN_INPUT: cf-si-logs-cli-plugin
+  PLUGIN_NAME: service-instance-logs-cli-plugin
+  VERSION_INPUT: version
