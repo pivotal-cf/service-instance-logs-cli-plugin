@@ -79,8 +79,23 @@ func Logs(cliConnection plugin.CliConnection, w io.Writer, serviceInstanceName s
 	if err != nil {
 		return err
 	}
+
 	serviceInstanceGUID := model.Guid
-	serviceName := model.ServiceOffering.Name
+
+	// obtain the service plan for the specific instance. This is needed when multiple service brokers provide the same service with the same label
+	output, err := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v2/service_plans/%s", model.ServicePlan.Guid))
+
+	if err != nil {
+		return fmt.Errorf("/v2/service_plans failed: %w", err)
+	}
+
+	var servicePlan ServicePlanStructure
+	err = json.Unmarshal([]byte(strings.Join(output, "\n")), &servicePlan)
+	if err != nil {
+		return fmt.Errorf("/v2/service_plan returned invalid JSON: %s", err)
+	}
+
+	serviceGuid := servicePlan.Entity.ServiceGuid
 
 	// get auth token
 	accessToken, err := cfutil.GetToken(cliConnection)
@@ -88,7 +103,7 @@ func Logs(cliConnection plugin.CliConnection, w io.Writer, serviceInstanceName s
 		return err
 	}
 
-	serviceInstanceLogsEndpoint, err := obtainServiceInstanceLogsEndpoint(cliConnection, serviceName)
+	serviceInstanceLogsEndpoint, err := obtainServiceInstanceLogsEndpoint(cliConnection, serviceGuid)
 	if err != nil {
 		return err
 	}
@@ -112,13 +127,20 @@ func Logs(cliConnection plugin.CliConnection, w io.Writer, serviceInstanceName s
 	return tailLogs(logClient, serviceInstanceGUID, accessToken, w)
 }
 
-type ServicesStructure struct {
-	TotalResults int `json:"total_results"`
-	Resources    []ResourceStructure
+type ServiceStructure struct {
+	Entity EntityStructure
+}
+
+type ServicePlanStructure struct {
+	Entity ServicePlanEntity `json:"entity"`
+}
+
+type ServicePlanEntity struct {
+	ServiceGuid string `json:"service_guid"`
 }
 
 type ResourceStructure struct {
-	Entity EntityStructure
+	Entity EntityStructure `json:"entity"`
 }
 
 type EntityStructure struct {
@@ -129,24 +151,21 @@ type ExtraStructure struct {
 	ServiceInstanceLogsEndpoint string
 }
 
-func obtainServiceInstanceLogsEndpoint(cliConnection plugin.CliConnection, serviceName string) (string, error) {
-	output, err := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v2/services?q=label:%s", serviceName))
+func obtainServiceInstanceLogsEndpoint(cliConnection plugin.CliConnection, serviceGuid string) (string, error) {
+	output, err := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v2/services/%s", serviceGuid))
+
 	if err != nil {
 		return "", fmt.Errorf("/v2/services failed: %s", err)
 	}
 
-	var services ServicesStructure
-	err = json.Unmarshal([]byte(strings.Join(output, "\n")), &services)
+	var service ServiceStructure
+	err = json.Unmarshal([]byte(strings.Join(output, "\n")), &service)
 	if err != nil {
 		return "", fmt.Errorf("/v2/services returned invalid JSON: %s", err)
 	}
 
-	if services.TotalResults == 0 {
-		return "", fmt.Errorf("/v2/services did not return the service instance")
-	}
-
 	var extra ExtraStructure
-	err = json.Unmarshal([]byte(services.Resources[0].Entity.Extra), &extra)
+	err = json.Unmarshal([]byte(service.Entity.Extra), &extra)
 	if err != nil {
 		return "", fmt.Errorf("/v2/services 'extra' field contained invalid JSON: %s", err)
 	}
