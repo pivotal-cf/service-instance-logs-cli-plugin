@@ -22,7 +22,6 @@ var _ = Describe("Logs", func() {
 		serviceInstanceName     = "siname"
 		testToken               = "some-token"
 		serviceGUID             = "870cdf18-7e15-435a-8459-6c38a8452d79"
-		servicePlanGuid         = "D6000A16-99D7-4E92-8FB7-5EC1E33D633B"
 	)
 
 	var (
@@ -34,12 +33,11 @@ var _ = Describe("Logs", func() {
 		testError              error
 		abnormalCloseTestError error
 		output                 *gbytes.Buffer
-		servicePlanOutput      []string
 	)
 
 	BeforeEach(func() {
 		fakeCliConnection = &pluginfakes.FakeCliConnection{}
-		fakeCliConnection.GetServiceReturns(plugin_models.GetService_Model{Guid: serviceGUID, ServicePlan: plugin_models.GetService_ServicePlan{Guid: servicePlanGuid}}, nil)
+		fakeCliConnection.GetServiceReturns(plugin_models.GetService_Model{Guid: serviceGUID}, nil)
 		fakeCliConnection.AccessTokenReturns("bearer "+testToken, nil)
 		fakeLogClientBuilder = &logclientfakes.FakeLogClientBuilder{}
 		fakeLogClient = &logclientfakes.FakeLogClient{}
@@ -50,31 +48,18 @@ var _ = Describe("Logs", func() {
 		abnormalCloseTestError = errors.New(abnormalCloseErrMessage)
 		output = gbytes.NewBuffer()
 
-		servicePlanOutput = []string{
-			`{`,
-			`"entity": {`,
-			`"service_guid": "aaaa-bbbb-cccc-dddd"`,
-			`}`,
-			`}`}
-
 		servicesOutput := []string{
+			`{`,
+			`"total_results": 1,`,
+			`"resources": [`,
 			`{`,
 			`"entity": {`,
 			`"extra": "{\"documentationUrl\":\"http://docs.pivotal.io/spring-cloud-services/\",\"serviceInstanceLogsEndpoint\":\"https://service-instance-logs/logs/\"}"`,
 			`}`,
+			`}`,
+			`]`,
 			`}`}
-
-		fakeCliConnection.CliCommandWithoutTerminalOutputStub = func(args ...string) ([]string, error) {
-			switch args[1] {
-			case "/v2/service_plans/D6000A16-99D7-4E92-8FB7-5EC1E33D633B":
-				return servicePlanOutput, nil
-			case "/v2/services/aaaa-bbbb-cccc-dddd":
-				return servicesOutput, nil
-			default:
-				return nil, nil
-			}
-		}
-
+		fakeCliConnection.CliCommandWithoutTerminalOutputReturns(servicesOutput, nil)
 	})
 
 	JustBeforeEach(func() {
@@ -101,39 +86,9 @@ var _ = Describe("Logs", func() {
 		})
 	})
 
-	Context("when obtaining service plans returns an error", func() {
-		BeforeEach(func() {
-			fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{}, testError)
-		})
-
-		It("should propagate the error", func() {
-			Expect(err).To(MatchError("/v2/service_plans failed: " + errMessage))
-		})
-	})
-
-	Context("when service plans output is malformed JSON", func() {
-		BeforeEach(func() {
-			output := []string{`{`}
-			fakeCliConnection.CliCommandWithoutTerminalOutputReturns(output, nil)
-		})
-
-		It("should return a suitable error", func() {
-			Expect(err).To(MatchError("/v2/service_plan returned invalid JSON: unexpected end of JSON input"))
-		})
-	})
-
 	Context("when obtaining logs endpoint returns an error", func() {
 		BeforeEach(func() {
-			fakeCliConnection.CliCommandWithoutTerminalOutputStub = func(args ...string) ([]string, error) {
-				switch args[1] {
-				case "/v2/service_plans/D6000A16-99D7-4E92-8FB7-5EC1E33D633B":
-					return servicePlanOutput, nil
-				case "/v2/services/aaaa-bbbb-cccc-dddd":
-					return []string{}, testError
-				default:
-					return nil, nil
-				}
-			}
+			fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{}, testError)
 		})
 
 		It("should propagate the error", func() {
@@ -141,18 +96,21 @@ var _ = Describe("Logs", func() {
 		})
 	})
 
+	Context("when logs endpoint is not found", func() {
+		BeforeEach(func() {
+			output := []string{`{`, `"total_results": 0,`, `"resources": []`, `}`}
+			fakeCliConnection.CliCommandWithoutTerminalOutputReturns(output, nil)
+		})
+
+		It("should return a suitable error", func() {
+			Expect(err).To(MatchError("/v2/services did not return the service instance"))
+		})
+	})
+
 	Context("when services output is malformed JSON", func() {
 		BeforeEach(func() {
-			fakeCliConnection.CliCommandWithoutTerminalOutputStub = func(args ...string) ([]string, error) {
-				switch args[1] {
-				case "/v2/service_plans/D6000A16-99D7-4E92-8FB7-5EC1E33D633B":
-					return servicePlanOutput, nil
-				case "/v2/services/aaaa-bbbb-cccc-dddd":
-					return []string{`{`}, nil
-				default:
-					return nil, nil
-				}
-			}
+			output := []string{`{`}
+			fakeCliConnection.CliCommandWithoutTerminalOutputReturns(output, nil)
 		})
 
 		It("should return a suitable error", func() {
@@ -164,21 +122,16 @@ var _ = Describe("Logs", func() {
 		BeforeEach(func() {
 			servicesOutput := []string{
 				`{`,
+				`"total_results": 1,`,
+				`"resources": [`,
+				`{`,
 				`"entity": {`,
 				`"extra": "{"`,
 				`}`,
+				`}`,
+				`]`,
 				`}`}
-
-			fakeCliConnection.CliCommandWithoutTerminalOutputStub = func(args ...string) ([]string, error) {
-				switch args[1] {
-				case "/v2/service_plans/D6000A16-99D7-4E92-8FB7-5EC1E33D633B":
-					return servicePlanOutput, nil
-				case "/v2/services/aaaa-bbbb-cccc-dddd":
-					return servicesOutput, nil
-				default:
-					return nil, nil
-				}
-			}
+			fakeCliConnection.CliCommandWithoutTerminalOutputReturns(servicesOutput, nil)
 		})
 
 		It("should return a suitable error", func() {
@@ -190,21 +143,16 @@ var _ = Describe("Logs", func() {
 		BeforeEach(func() {
 			servicesOutput := []string{
 				`{`,
+				`"total_results": 1,`,
+				`"resources": [`,
+				`{`,
 				`"entity": {`,
 				`"extra": "{\"documentationUrl\":\"http://docs.pivotal.io/spring-cloud-services/\"}"`,
 				`}`,
+				`}`,
+				`]`,
 				`}`}
-
-			fakeCliConnection.CliCommandWithoutTerminalOutputStub = func(args ...string) ([]string, error) {
-				switch args[1] {
-				case "/v2/service_plans/D6000A16-99D7-4E92-8FB7-5EC1E33D633B":
-					return servicePlanOutput, nil
-				case "/v2/services/aaaa-bbbb-cccc-dddd":
-					return servicesOutput, nil
-				default:
-					return nil, nil
-				}
-			}
+			fakeCliConnection.CliCommandWithoutTerminalOutputReturns(servicesOutput, nil)
 		})
 
 		It("should return a suitable error", func() {
@@ -284,21 +232,16 @@ var _ = Describe("Logs", func() {
 				BeforeEach(func() {
 					servicesOutput := []string{
 						`{`,
+						`"total_results": 1,`,
+						`"resources": [`,
+						`{`,
 						`"entity": {`,
 						`"extra": "{\"documentationUrl\":\"http://docs.pivotal.io/spring-cloud-services/\",\"serviceInstanceLogsEndpoint\":\"http://service-instance-logs/logs/\"}"`,
 						`}`,
+						`}`,
+						`]`,
 						`}`}
-
-					fakeCliConnection.CliCommandWithoutTerminalOutputStub = func(args ...string) ([]string, error) {
-						switch args[1] {
-						case "/v2/service_plans/D6000A16-99D7-4E92-8FB7-5EC1E33D633B":
-							return servicePlanOutput, nil
-						case "/v2/services/aaaa-bbbb-cccc-dddd":
-							return servicesOutput, nil
-						default:
-							return nil, nil
-						}
-					}
+					fakeCliConnection.CliCommandWithoutTerminalOutputReturns(servicesOutput, nil)
 				})
 
 				It("should correctly transform the endpoint passed to the LogClientBuilder", func() {
@@ -311,21 +254,16 @@ var _ = Describe("Logs", func() {
 				BeforeEach(func() {
 					servicesOutput := []string{
 						`{`,
+						`"total_results": 1,`,
+						`"resources": [`,
+						`{`,
 						`"entity": {`,
 						`"extra": "{\"documentationUrl\":\"http://docs.pivotal.io/spring-cloud-services/\",\"serviceInstanceLogsEndpoint\":\"::\"}"`,
 						`}`,
+						`}`,
+						`]`,
 						`}`}
-
-					fakeCliConnection.CliCommandWithoutTerminalOutputStub = func(args ...string) ([]string, error) {
-						switch args[1] {
-						case "/v2/service_plans/D6000A16-99D7-4E92-8FB7-5EC1E33D633B":
-							return servicePlanOutput, nil
-						case "/v2/services/aaaa-bbbb-cccc-dddd":
-							return servicesOutput, nil
-						default:
-							return nil, nil
-						}
-					}
+					fakeCliConnection.CliCommandWithoutTerminalOutputReturns(servicesOutput, nil)
 				})
 
 				It("should return a suitable error", func() {
