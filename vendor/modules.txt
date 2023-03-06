@@ -30,7 +30,7 @@ github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
 # github.com/golang/protobuf v0.0.0-20151023031640-5baca1b63153
 ## explicit
-# github.com/gorilla/websocket v1.1.1-0.20170319172727-a91eba7f9777
+# github.com/gorilla/websocket v1.4.1
 ## explicit
 github.com/gorilla/websocket
 # github.com/mattn/go-colorable v0.0.7

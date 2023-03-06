@@ -16,8 +16,8 @@ github.com/gogo/protobuf v0.0.0-20170529194536-b79ae77db468 h1:EDoIQkD+atR0Ch+sr
 github.com/gogo/protobuf v0.0.0-20170529194536-b79ae77db468/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
 github.com/golang/protobuf v0.0.0-20151023031640-5baca1b63153 h1:SJWo5NPMQeZ3XkwNMCmCW/RD5P5sjY8pNRw2ha7CjqQ=
 github.com/golang/protobuf v0.0.0-20151023031640-5baca1b63153/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
-github.com/gorilla/websocket v1.1.1-0.20170319172727-a91eba7f9777 h1:2Wp9JIvcGxCnl0ju03V2uMMLBwP/NXsgc/U8qwb/rp8=
-github.com/gorilla/websocket v1.1.1-0.20170319172727-a91eba7f9777/go.mod h1:E7qHFY5m1UJ88s3WnNqhKjPHQ0heANvMoAMk2YaljkQ=
+github.com/gorilla/websocket v1.4.1 h1:q7AeDBpnBk8AogcD4DSag/Ukw/KV+YhzLj2bP5HvKCM=
+github.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/kr/pretty v0.2.1 h1:Fmg33tUaq4/8ym9TJN1x7sLJnHVwhP33CNkpYV/7rwI=
 github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
