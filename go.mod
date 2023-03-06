@@ -10,7 +10,7 @@ require (
 	github.com/cloudfoundry/sonde-go v0.0.0-20170525164920-5f5bca3bcb61
 	github.com/elazarl/goproxy v0.0.0-20170413182129-aacba83f36a5 // indirect
 	github.com/fatih/color v1.1.1-0.20161025120501-bf82308e8c85
-	github.com/gogo/protobuf v0.0.0-20170529194536-b79ae77db468
+	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v0.0.0-20151023031640-5baca1b63153 // indirect
 	github.com/gorilla/websocket v1.1.1-0.20170319172727-a91eba7f9777 // indirect
 	github.com/mattn/go-colorable v0.0.7 // indirect

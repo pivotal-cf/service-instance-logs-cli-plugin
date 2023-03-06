@@ -23,7 +23,7 @@ github.com/cloudfoundry/sonde-go/events
 # github.com/fatih/color v1.1.1-0.20161025120501-bf82308e8c85
 ## explicit
 github.com/fatih/color
-# github.com/gogo/protobuf v0.0.0-20170529194536-b79ae77db468
+# github.com/gogo/protobuf v1.3.2
 ## explicit
 github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/proto
