@@ -2,13 +2,12 @@ package logging_test
 
 import (
 	"errors"
-
 	"sync"
 	"time"
 
 	"code.cloudfoundry.org/cli/plugin/models"
 	"code.cloudfoundry.org/cli/plugin/pluginfakes"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient/logclientfakes"
@@ -55,14 +54,16 @@ var _ = Describe("Logs", func() {
 			`"entity": {`,
 			`"service_guid": "aaaa-bbbb-cccc-dddd"`,
 			`}`,
-			`}`}
+			`}`,
+		}
 
 		servicesOutput := []string{
 			`{`,
 			`"entity": {`,
 			`"extra": "{\"documentationUrl\":\"http://docs.pivotal.io/spring-cloud-services/\",\"serviceInstanceLogsEndpoint\":\"https://service-instance-logs/logs/\"}"`,
 			`}`,
-			`}`}
+			`}`,
+		}
 
 		fakeCliConnection.CliCommandWithoutTerminalOutputStub = func(args ...string) ([]string, error) {
 			switch args[1] {
@@ -74,7 +75,6 @@ var _ = Describe("Logs", func() {
 				return nil, nil
 			}
 		}
-
 	})
 
 	JustBeforeEach(func() {
@@ -167,7 +167,8 @@ var _ = Describe("Logs", func() {
 				`"entity": {`,
 				`"extra": "{"`,
 				`}`,
-				`}`}
+				`}`,
+			}
 
 			fakeCliConnection.CliCommandWithoutTerminalOutputStub = func(args ...string) ([]string, error) {
 				switch args[1] {
@@ -193,7 +194,8 @@ var _ = Describe("Logs", func() {
 				`"entity": {`,
 				`"extra": "{\"documentationUrl\":\"http://docs.pivotal.io/spring-cloud-services/\"}"`,
 				`}`,
-				`}`}
+				`}`,
+			}
 
 			fakeCliConnection.CliCommandWithoutTerminalOutputStub = func(args ...string) ([]string, error) {
 				switch args[1] {
@@ -287,7 +289,8 @@ var _ = Describe("Logs", func() {
 						`"entity": {`,
 						`"extra": "{\"documentationUrl\":\"http://docs.pivotal.io/spring-cloud-services/\",\"serviceInstanceLogsEndpoint\":\"http://service-instance-logs/logs/\"}"`,
 						`}`,
-						`}`}
+						`}`,
+					}
 
 					fakeCliConnection.CliCommandWithoutTerminalOutputStub = func(args ...string) ([]string, error) {
 						switch args[1] {
@@ -314,7 +317,8 @@ var _ = Describe("Logs", func() {
 						`"entity": {`,
 						`"extra": "{\"documentationUrl\":\"http://docs.pivotal.io/spring-cloud-services/\",\"serviceInstanceLogsEndpoint\":\"::\"}"`,
 						`}`,
-						`}`}
+						`}`,
+					}
 
 					fakeCliConnection.CliCommandWithoutTerminalOutputStub = func(args ...string) ([]string, error) {
 						switch args[1] {
