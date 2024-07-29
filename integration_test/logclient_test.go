@@ -1,20 +1,15 @@
 package main_test
 
 import (
+	"bufio"
+	"fmt"
 	"os/exec"
+	"strconv"
+	"strings"
+	"syscall"
 	"time"
 
-	"strconv"
-
-	"bufio"
-
-	"syscall"
-
-	"strings"
-
-	"fmt"
-
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient"
 )
@@ -80,14 +75,12 @@ var _ = AfterSuite(func() {
 })
 
 var _ = Describe("Logclient integration test", func() {
-
 	BeforeEach(func() {
 		builder := logclient.NewLogClientBuilder()
 		logClient = builder.InsecureSkipVerify(true).Endpoint(endpointUrl).Build()
 	})
 
 	Describe("Verify Logclient interaction with service instance logs endpoint", func() {
-
 		JustBeforeEach(func() {
 			logs, err = logClient.RecentLogs(serviceGuid, oauthToken)
 			Expect(err).NotTo(HaveOccurred())

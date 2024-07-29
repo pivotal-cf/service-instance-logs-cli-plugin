@@ -15,7 +15,7 @@ export GOFLAGS="-mod=vendor"
 function run_tests() {
 	pushd "${CF_CLI_PLUGIN_INPUT}" >/dev/null
 
-	go install github.com/onsi/ginkgo/ginkgo
+	go install github.com/onsi/ginkgo/v2/ginkgo
 	ginkgo -r
 
 	popd >/dev/null

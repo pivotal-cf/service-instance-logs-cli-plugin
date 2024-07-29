@@ -4,13 +4,12 @@ import (
 	"fmt"
 
 	"code.cloudfoundry.org/cli/plugin"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/pluginutil"
 )
 
 var _ = Describe("ParsePluginVersion", func() {
-
 	var (
 		pluginVersion string
 		fail          func(format string, inserts ...interface{})
@@ -28,7 +27,6 @@ var _ = Describe("ParsePluginVersion", func() {
 				firstFailure = fmt.Sprintf(format, inserts...)
 			}
 			failed = true
-
 		}
 	})
 
@@ -81,5 +79,4 @@ var _ = Describe("ParsePluginVersion", func() {
 			Expect(firstFailure).To(Equal(`pluginVersion "2.0." has invalid format. Expected integer components.`))
 		})
 	})
-
 })
