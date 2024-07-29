@@ -2,11 +2,10 @@ package logclient_test
 
 import (
 	"net/url"
-
 	"os"
 
 	"github.com/cloudfoundry/noaa/consumer"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient/logclientfakes"

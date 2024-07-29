@@ -17,21 +17,20 @@
 package format_test
 
 import (
-	"github.com/pivotal-cf/service-instance-logs-cli-plugin/format"
-
 	"bytes"
 	"errors"
 	"fmt"
 
+	"github.com/pivotal-cf/service-instance-logs-cli-plugin/format"
+
 	"code.cloudfoundry.org/cli/plugin/models"
 	"code.cloudfoundry.org/cli/plugin/pluginfakes"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Actions", func() {
 	Describe("RunAction", func() {
-
 		const (
 			testMessage = "some message"
 			failMessage = "FAILED"
@@ -162,7 +161,6 @@ var _ = Describe("Actions", func() {
 	})
 
 	Describe("RunActionQuietly", func() {
-
 		const (
 			failMessage = "FAILED"
 			certHint    = "Hint: try --skip-ssl-validation at your own risk.\n"

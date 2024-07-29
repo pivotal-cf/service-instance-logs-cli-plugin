@@ -17,13 +17,12 @@
 package cli_test
 
 import (
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/cli"
 )
 
 var _ = Describe("Flags", func() {
-
 	var (
 		args           = []string{"cf", "sil", "my-service", "--recent"}
 		recent         bool
@@ -69,7 +68,6 @@ var _ = Describe("Flags", func() {
 				Expect(recent).To(BeFalse())
 			})
 		})
-
 	})
 
 	Describe("skip ssl validation flag", func() {
@@ -83,7 +81,7 @@ var _ = Describe("Flags", func() {
 				Expect(sslNoVerify).To(BeTrue())
 			})
 		})
-		
+
 		Context("when the skip ssl validation flag is not set", func() {
 			BeforeEach(func() {
 				args = []string{"cf", "sil", "my-service"}
@@ -102,11 +100,11 @@ var _ = Describe("Flags", func() {
 				args = []string{"cf", "sil", "my-service"}
 			})
 
-				It("should capture an array of positional arguments", func() {
-					Expect(err).ToNot(HaveOccurred())
-					Expect(len(positionalArgs)).To(Equal(3))
-					Expect(positionalArgs[2]).To(Equal("my-service"))
-				})
+			It("should capture an array of positional arguments", func() {
+				Expect(err).ToNot(HaveOccurred())
+				Expect(len(positionalArgs)).To(Equal(3))
+				Expect(positionalArgs[2]).To(Equal("my-service"))
+			})
 		})
 
 		Context("when no positional arguments are provided", func() {

@@ -3,11 +3,10 @@ package logclient_test
 import (
 	"errors"
 	"fmt"
-
 	"time"
 
 	"github.com/cloudfoundry/sonde-go/events"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient"
 	"github.com/pivotal-cf/service-instance-logs-cli-plugin/logclient/logclientfakes"
@@ -78,9 +77,7 @@ var _ = Describe("Logclient", func() {
 		})
 
 		Context("when request for recent logs from consumer returns normally", func() {
-			var (
-				consumerRecentLogsResponse []*events.LogMessage
-			)
+			var consumerRecentLogsResponse []*events.LogMessage
 
 			BeforeEach(func() {
 				if logClient, ok := logClient.(logclient.FieldSetter); ok {
@@ -307,11 +304,13 @@ func createLogMessage(fieldSuffix string, messageType events.LogMessage_MessageT
 	*sourceInstanceValue = fmt.Sprintf("SI-%s", fieldSuffix)
 	messageTypeValue := new(events.LogMessage_MessageType)
 	*messageTypeValue = messageType
-	return events.LogMessage{Message: []byte(fmt.Sprintf("MESSAGE-%s", fieldSuffix)),
+	return events.LogMessage{
+		Message:        []byte(fmt.Sprintf("MESSAGE-%s", fieldSuffix)),
 		SourceType:     sourceTypeValue,
 		SourceInstance: sourceInstanceValue,
 		MessageType:    messageTypeValue,
-		Timestamp:      &unixTimestamp}
+		Timestamp:      &unixTimestamp,
+	}
 }
 
 func formatUnixTimestamp(nanosSinceEpoch int64) string {
