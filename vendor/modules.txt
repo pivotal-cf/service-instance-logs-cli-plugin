@@ -16,8 +16,10 @@ github.com/cloudfoundry/noaa/errors
 # github.com/cloudfoundry/sonde-go v0.0.0-20251217143644-d1670a435f2a
 ## explicit; go 1.23
 github.com/cloudfoundry/sonde-go/events
-# github.com/elazarl/goproxy v0.0.0-20170413182129-aacba83f36a5
-## explicit
+# github.com/elazarl/goproxy v1.2.1
+## explicit; go 1.20
+# github.com/elazarl/goproxy/ext v0.0.0-20260212222702-ffdf0b284e35
+## explicit; go 1.23.0
 # github.com/fatih/color v1.18.0
 ## explicit; go 1.17
 github.com/fatih/color
@@ -87,8 +89,10 @@ github.com/onsi/gomega/matchers/support/goraph/edge
 github.com/onsi/gomega/matchers/support/goraph/node
 github.com/onsi/gomega/matchers/support/goraph/util
 github.com/onsi/gomega/types
-# golang.org/x/net v0.25.0
-## explicit; go 1.18
+# github.com/stretchr/testify v1.11.1
+## explicit; go 1.17
+# golang.org/x/net v0.36.0
+## explicit; go 1.23.0
 golang.org/x/net/context
 golang.org/x/net/html
 golang.org/x/net/html/atom
@@ -97,7 +101,7 @@ golang.org/x/net/html/charset
 ## explicit; go 1.24.0
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/text v0.15.0
+# golang.org/x/text v0.22.0
 ## explicit; go 1.18
 golang.org/x/text/encoding
 golang.org/x/text/encoding/charmap
@@ -116,7 +120,7 @@ golang.org/x/text/internal/utf8internal
 golang.org/x/text/language
 golang.org/x/text/runes
 golang.org/x/text/transform
-# golang.org/x/tools v0.21.0
+# golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d
 ## explicit; go 1.19
 golang.org/x/tools/cover
 golang.org/x/tools/go/ast/inspector
