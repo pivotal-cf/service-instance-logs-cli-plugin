@@ -2,14 +2,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"io"
 	"log"
 	"mime/multipart"
 	"net/http"
 	"time"
-
-	"io"
-
-	"fmt"
 
 	"github.com/cloudfoundry/dropsonde/envelope_sender"
 	"github.com/cloudfoundry/sonde-go/events"
@@ -37,7 +35,20 @@ func (e *HTTPEventEmitter) Origin() string {
 
 func (e *HTTPEventEmitter) Emit(event events.Event) error {
 	partWriter, err := e.mpw.CreatePart(nil)
-	binaryData, _ := event.(*events.LogMessage).Marshal()
+	if err != nil {
+		return err
+	}
+
+	logMessage, ok := event.(*events.LogMessage)
+	if !ok {
+		return fmt.Errorf("event is not a LogMessage")
+	}
+
+	binaryData, err := proto.Marshal(logMessage)
+	if err != nil {
+		return err
+	}
+
 	_, err = partWriter.Write(binaryData)
 	return err
 }
@@ -48,7 +59,7 @@ func (e *HTTPEventEmitter) EmitEnvelope(envelope *events.Envelope) error {
 		return err
 	}
 
-	binaryData, err := envelope.Marshal()
+	binaryData, err := proto.Marshal(envelope)
 	if err != nil {
 		return err
 	}
@@ -61,7 +72,7 @@ func (e *HTTPEventEmitter) Close() error {
 	return e.mpw.Close()
 }
 
-//noinspection GoUnusedParameter
+// noinspection GoUnusedParameter
 func dumpServiceLogs(rw http.ResponseWriter, r *http.Request) {
 	emitter := newHTTPEmitter(rw)
 	sender := envelope_sender.NewEnvelopeSender(emitter)
@@ -111,7 +122,7 @@ func makeDescendingGenerator(start int64) func() int64 {
 	}
 }
 
-//noinspection GoUnusedParameter
+// noinspection GoUnusedParameter
 func apiInfo(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Content-Type", "application/json;charset=utf-8")
 	rw.Header().Set("X-Content-Type-Options", "nosniff")
@@ -120,7 +131,7 @@ func apiInfo(rw http.ResponseWriter, r *http.Request) {
 	io.WriteString(rw, `{ "api_version": "2.75.0", "app_ssh_endpoint": "0.0.0.0:2222", "app_ssh_host_key_fingerprint": "9f:ae:12:42:19:33:6e:cc:5b:5b:44:af:13:a1:04:22", "app_ssh_oauth_client": "ssh-proxy", "authorization_endpoint": "http://0.0.0.0:8888", "build": "", "description": "fake api for integration testing purposes", "doppler_logging_endpoint": "wss://0.0.0.0:443", "logging_endpoint": "wss://0.0.0.0:443", "min_cli_version": "6.22.0", "min_recommended_cli_version": "6.23.0", "name": "integration", "routing_endpoint": "https://0.0.0.0:8888/routing", "support": "https://support.pivotal.io", "token_endpoint": "http://0.0.0.0:8888", "version": 0}`)
 }
 
-//noinspection GoUnusedParameter
+// noinspection GoUnusedParameter
 func login(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Content-Type", "application/json;charset=utf-8")
 	io.WriteString(rw, `{
@@ -133,7 +144,7 @@ func login(rw http.ResponseWriter, r *http.Request) {
 }`)
 }
 
-//noinspection GoUnusedParameter
+// noinspection GoUnusedParameter
 func servicesInfo(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Content-Type", "application/json;charset=utf-8")
 	io.WriteString(rw, `{
@@ -171,7 +182,7 @@ func servicesInfo(rw http.ResponseWriter, r *http.Request) {
 }`)
 }
 
-//noinspection GoUnusedParameter
+// noinspection GoUnusedParameter
 func orgsInfo(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Content-Type", "application/json;charset=utf-8")
 	io.WriteString(rw, `{
@@ -207,7 +218,7 @@ func orgsInfo(rw http.ResponseWriter, r *http.Request) {
 }`)
 }
 
-//noinspection GoUnusedParameter
+// noinspection GoUnusedParameter
 func spacesInfo(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Content-Type", "application/json;charset=utf-8")
 	io.WriteString(rw, `{
@@ -245,7 +256,7 @@ func spacesInfo(rw http.ResponseWriter, r *http.Request) {
 }`)
 }
 
-//noinspection GoUnusedParameter
+// noinspection GoUnusedParameter
 func serviceInstances(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Content-Type", "application/json;charset=utf-8")
 	io.WriteString(rw, `{
@@ -339,7 +350,7 @@ func serviceInstances(rw http.ResponseWriter, r *http.Request) {
 }`)
 }
 
-//noinspection GoUnusedParameter
+// noinspection GoUnusedParameter
 func testServiceInstanceInfo(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Content-Type", "application/json;charset=utf-8")
 	io.WriteString(rw, `{
@@ -371,7 +382,7 @@ func testServiceInstanceInfo(rw http.ResponseWriter, r *http.Request) {
 }`)
 }
 
-//noinspection GoUnusedParameter
+// noinspection GoUnusedParameter
 func servicesSummary(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Content-Type", "application/json;charset=utf-8")
 	io.WriteString(rw, `{
