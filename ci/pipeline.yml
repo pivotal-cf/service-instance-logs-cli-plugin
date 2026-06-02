@@ -71,6 +71,7 @@ resources:
   - name: src
     type: git
     icon: github
+    check_every: 10m
     source:
       uri: https://((github.token))@github.com/pivotal-cf/service-instance-logs-cli-plugin.git
       branch: ((branch))
@@ -78,6 +79,7 @@ resources:
   - name: version
     type: git
     icon: tag
+    check_every: 10m
     source:
       uri: https://((github.token))@github.com/pivotal-cf/service-instance-logs-cli-plugin.git
       branch: ((branch))
