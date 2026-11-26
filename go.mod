@@ -14,6 +14,7 @@ require (
 	github.com/google/pprof v0.0.0-20240424215950-a892ee059fd6 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/nxadm/tail v1.4.11 // indirect
 	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
@@ -24,9 +25,9 @@ require (
 
 require (
 	code.cloudfoundry.org/cli v7.1.0+incompatible
-	github.com/cloudfoundry/dropsonde v0.0.0-20220601180909-44f90d9d0696
+	github.com/cloudfoundry/dropsonde v1.1.0
 	github.com/cloudfoundry/noaa v2.1.1-0.20171030182453-9d59e2b25abb+incompatible
-	github.com/cloudfoundry/sonde-go v0.0.0-20220324234026-9851b3a0dce2
+	github.com/cloudfoundry/sonde-go v0.0.0-20220627221915-ff36de9c3435
 	github.com/elazarl/goproxy v0.0.0-20170413182129-aacba83f36a5 // indirect
 	github.com/fatih/color v1.18.0
 	github.com/gogo/protobuf v1.3.2
